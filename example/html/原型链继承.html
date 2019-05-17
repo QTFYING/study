@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+</head>
+
+<body>
+    <script>
+        function Test1(str) {
+            this.b = str;
+        }
+        Test1.prototype.Get_Test1String = function () {
+            return this.b;
+        };
+
+        var Test2 = function (str) {
+            this.a = str;
+        }
+        Test2.prototype = new Test1("test1");
+        Test2.prototype.get_string = function () {
+            return this.a;
+        };
+
+        var myTest2 = new Test2("test2");
+        console.log(myTest2); //Object
+        console.log(myTest2.get_string()); //"test2"
+        console.log(myTest2.Get_Test1String()); //"test1"
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>HTML 5 Application - IndexedDb</title>
+    <script type="text/javascript">
+        var blockbusters = {
+            title: "身份介绍",
+            name: 'yeyu',
+            job: "CEO",
+            year: 18
+        }; //假设这个object用来保存的
+
+        var db;
+        var request;
+        var store;
+
+        function createDatabase(dbName) {
+            request = indexedDB.open(dbName, 1);
+
+            request.onerror = function () {
+                alert("fail to open datbase with:" + event.target.message);
+            }
+
+            request.onsuccess = function (event) {
+                alert("success open the database!");
+                db = event.target.result;
+                var transaction = db.transaction(["blockbusters"], "readwrite");
+                var objectStore = transaction.objectStore("blockbusters");
+                objectStore.add(blockbusters);
+            }
+            
+            request.onupgradeneeded = function (event) {
+                alert("version Change");
+                db = event.target.result;
+                store = db.createObjectStore("blockbusters", {
+                    keyPath: "title",
+                    autoIncrement: false
+                });
+            }
+        }
+
+        function deletedatabase(dbName) {
+            try {
+                indexedDB.deleteDatabase(dbName);
+            } catch (e) {
+                alert(e.getMessage);
+            }
+        }
+
+        createDatabase('Virgo123')
+    </script>
+</head>
+
+<body>
+    <button onclick="deletedatabase('customers')">delet Database</button>
+
+</body>
+
+</html>

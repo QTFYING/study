@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+</head>
+
+<body>
+    <button id="1">1</button>
+    <button id="2">2</button>
+    <button id="3">3</button>
+</body>
+<script src="../js/jquery-2.1.1.min.js"></script>
+<script>
+    // 获取每个id，同时改变每个id的值
+    function fn(idNo, Text) {
+        this.idNo = $('button').attr("id");
+        changeText = $("button[id = " + idNo + "]").text(Text);
+        console.log(idNo + '-----');
+        console.log(this.idNo + '+++++');
+        var $e2 = $($('button')[1]);
+
+        console.log($e2);
+
+    }
+
+    fn.prototype = {
+        constructor: fn,
+        changeBorder: function (idNo) {
+            console.log('border');
+        },
+        changeColor: function () {
+            console.log('color');
+        }
+    }
+
+    // $("button[id = '1']").text('ha');
+
+    var f1 = new fn(1, 11);
+    var f2 = new fn(2, 22);
+    var f2 = new fn(3, 33);
+
+    
+</script>
+
+</html>

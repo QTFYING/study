@@ -1,0 +1,31 @@
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>测试专用</title>
+</head>
+<body>
+    <button class="btn">
+        点击1
+    </button>
+
+    <button class="btn1">
+        点击2
+    </button>
+
+    <script src="./js/jquery-2.1.1.min.js"></script>
+
+    <script>
+        const arrayOfIntegers = [1, 4, 5, 9, 0, -1, 5];
+
+        let counter = 0;
+
+        arrayOfIntegers.forEach((integer) => {
+            const remainder = Math.abs(integer % 2);
+            counter += remainder;
+        });
+
+        console.log(counter);
+
+    </script>
+</body>
+</html>

@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Client coordinates Example</title>
+</head>
+
+<body>
+  <div id="div">123</div>
+
+  <button class="button">A</button>
+  <button class="button">B</button>
+  <button class="button">C</button>
+  <button class="button">D</button>
+
+  <div id="output"></div>
+
+  <script>
+    var doc = document.getElementById('div');
+    setTimeout(function () {
+      doc.style.color = 'red';
+    }, 2000, setTimeout(function () {
+      doc.style.color = 'yellow';
+    }, 5000));
+  </script>
+  <script src="../js/test.js"></script>
+</body>

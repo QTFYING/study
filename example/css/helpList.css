@@ -1,0 +1,89 @@
+/* 样式reset */
+html,
+body {
+  height: 100%;
+}
+body,
+div,
+ul,
+li,
+a,
+span,
+p,
+button {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  font-size: 100%;
+  font: inherit;
+}
+ul {
+  list-style: none;
+}
+a {
+  text-decoration: none;
+}
+button,
+button:active {
+  outline: none;
+}
+/****************/
+.container {
+  position: relative;
+  width: 7.5rem;
+  min-height: 100%;
+  margin: 0 auto;
+  box-sizing: border-box;
+  background-color: #EFEFF4;
+}
+.split-gap {
+  height: .2rem;
+  background-color: transparent;
+}
+.help-wrap {
+  background-color: #fff;
+  padding: 0 .44rem;
+}
+.help-wrap ul > li {
+  border-top: 1px solid #C7C7C7;
+}
+.help-wrap .sub-title {
+  height: .88rem;
+  font-size: .28rem;
+  line-height: .88rem;
+  color: #333333;
+  width: 100%;
+  background: url(../image/arrow-down-black.png) right center no-repeat;
+  background-size: .28rem;
+}
+.help-wrap .sub-title span {
+  margin-right: .17rem;
+}
+.help-wrap .content {
+  display: none;
+  position: relative;
+  padding: .08rem 0;
+}
+.help-wrap .content .answer-label {
+  position: absolute;
+  top: .08rem;
+  left: 0;
+  font-size: .28rem;
+  color: #333333;
+}
+.help-wrap .content .answer-link,
+.help-wrap .content .answer-txt {
+  margin-left: .5rem;
+  font-size: .28rem;
+  line-height: .40rem;
+  color: #999999;
+}
+.help-wrap .content .answer-link {
+  color: #4A90E2;
+}
+.help-wrap .sub-title.active {
+  background-image: url(../image/arrow-up-black.png);
+}
+.help-wrap .sub-title.active + .content {
+  display: block;
+}

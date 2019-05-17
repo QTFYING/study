@@ -1,0 +1,50 @@
+{
+  "deadLine": "infinite",
+  "data": {
+    "cmd": "/uci-pre/unionpay/cardApply/getAllBank.json",
+    "resp": "00",
+    "msg": "invoke succes",
+    "params": [{
+      "bankNo": "03080000",
+      "bankNm": "招商银行",
+      "bankImg": null,
+      "bankActivity": "招商银行活动"
+    }, {
+      "bankNo": "01030000",
+      "bankNm": "农业银行",
+      "bankImg": null,
+      "bankActivity": "农业银行活动"
+    }, {
+      "bankNo": "03020000",
+      "bankNm": "中信银行",
+      "bankImg": null,
+      "bankActivity": "中信银行活动"
+    }, {
+      "bankNo": "01050000",
+      "bankNm": "建设银行",
+      "bankImg": null,
+      "bankActivity": "建设银行活动"
+    }, {
+      "bankNo": "03100000",
+      "bankNm": "浦发银行",
+      "bankImg": null,
+      "bankActivity": "浦发银行活动"
+    }, {
+      "bankNo": "04100000",
+      "bankNm": "平安银行",
+      "bankImg": null,
+      "bankActivity": "平安银行活动"
+    }, {
+      "bankNo": "03010000",
+      "bankNm": "交通银行",
+      "bankImg": null,
+      "bankActivity": "交通银行活动"
+    }, {
+      "bankNo": "01020000",
+      "bankNm": "工商银行",
+      "bankImg": null,
+      "bankActivity": "怎么没了"
+    }],
+    "v": "1.0"
+  }
+}

@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+</head>
+
+<body>
+    <script>
+        // function ShapeBase() {
+        //     this.show = function () {
+        //         alert("ShapeBase show");
+        //     };
+        //     this.init = function () {
+        //         alert("ShapeBase init");
+        //     };
+        // }
+
+        // ShapeBase.prototype.show = function () {
+        //     alert("ShapeBase show");
+        // }
+        // ShapeBase.prototype.init = function () {
+        //     alert("ShapeBase init");
+        // }
+
+        function ShapeBase(src) {
+            this.init(src);
+        };
+
+        ShapeBase.prototype = {
+            constructor: ShapeBase,
+            show: function () {
+                alert("ShapeBase show");
+            },
+            init: function (src) {
+                alert(src);
+            }
+        };
+
+        function test(src) {
+            var s = new ShapeBase(src);   
+            s.show();
+        };
+
+        test(004);
+    </script>
+</body>
+
+</html>

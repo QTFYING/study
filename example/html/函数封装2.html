@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+</head>
+
+<body>
+    <button id="1">1t</button>
+    <button id="2">2t</button>
+    <button id="3">3t</button>
+</body>
+<script src="../js/jquery-2.1.1.min.js"></script>
+<script>
+    // 获取每个id，同时改变每个id的值
+    // function fn(idNo, Text) {
+    //     this.idNo = $('button').attr("id");
+    //     changeText = $("button[id = " + idNo + "]").text(Text);
+    //     console.log(idNo + '-----');
+    //     console.log(changeText);
+
+    //     for (i = 0; i < 3; i++) {
+    //         var text = $("button[id = "+ idNo +"]").text();
+    //         console.log('按钮的值:' + text );
+    //     }
+    // }
+
+    function fn(info) {
+        this._init_(info);
+    }
+
+    fn.prototype = {
+        constructor: fn,
+        _init_: function (info) {
+            //文本处理
+            this.idNo = info.text.idNo;
+            this.Text = info.text.Text;
+            $('#' + this.idNo).text(this.Text);
+            //css
+            this.cssInit(this.idNo, info.css);
+            //attr
+            this.attrInit(this.idNo, info.attr);
+
+        },
+        cssInit: function (id, cssObj) {
+            $('#' + id).css(cssObj);
+        },
+        attrInit: function (id, attr) {
+            attr.classList.map(function (value, index) {
+                console.log(index + '+++++');
+                console.log(value + '-----');
+                $('#' + id).addClass(value);
+            })
+
+            if (attr.href) {
+                $('#' + id).attr("href", attr.href);
+            }
+
+        }
+    }
+
+    var f1 = new fn({
+        text: {
+            idNo: "1",
+            Text: "hahahahah"
+        },
+        css: {
+            backgroundColor: "red",
+            color: "white",
+            fontSize: '50px'
+        },
+        attr: {
+            classList: ['c1', 'c2', 'c3'],
+            href: "www.baidu.com"
+        }
+    });
+    // var f1 = new fn({idNo:$('#1').attr('id'),Text:$('#1').text()});
+
+    // var f2data={
+    //     idNo:$('#2').attr('id'),
+    //     Text:$('#2').text()
+    // }
+
+    // var f2 = new fn(f2data);
+
+
+    // var f3 = new fn({idNo:$('#3').attr('id'),Text:$('#3').text()});
+</script>
+
+</html>

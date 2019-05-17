@@ -1,0 +1,53 @@
+{
+  "interfaceFamily": "缺陷管理",
+	"interfaceNo": "99288",
+	"interfaceTitle": "在线申卡 --- 在线申卡SW缓存首次断开网络不能正常读取缓存",
+  "data": {
+    "interfaceInfo": {
+      "originator": "琴亭夜雨",
+      "checker": "未知",
+      "start": "2019-04-22 17：02",
+      "end": "2019-04-28 14：00",
+			"status": "审核中",
+			"tips": "请评审相关人员务必在截止日之前审核完毕，到期自动审核通过"
+    },
+		"interfaceLog": [{
+      "checkerName": "琴亭夜雨1",
+      "checkerIntroduction": "未知",
+      "checkerTime": "2019-04-23 11：09",
+			"checkerAdvice": "第一条今天柯洁的发挥可以说非常出色，完成了另一种风格的测试。前天我说柯洁虽然看上去最后只输了1/4个子，但全场落后一步找不到拼的机会，AlphaGo发挥出色到可以说为，稳健到让柯洁想玉碎都找不到…"
+    },{
+      "checkerName": "琴亭夜雨2",
+      "checkerIntroduction": "未知",
+      "checkerTime": "2019-04-23 11：09",
+			"checkerAdvice": "第二条今天柯洁的发挥可以说非常出色，完成了另一种风格的测试。前天我说柯洁虽然看上去最后只输了1/4个子，但全场落后一步找不到拼的机会，AlphaGo发挥出色到可以说为，稳健到让柯洁想玉碎都找不到…"
+    },{
+      "checkerName": "琴亭夜雨",
+      "checkerIntroduction": "未知",
+      "checkerTime": "2019-04-23 11：09",
+			"checkerAdvice": "第三条今天柯洁的发挥可以说非常出色，完成了另一种风格的测试。前天我说柯洁虽然看上去最后只输了1/4个子，但全场落后一步找不到拼的机会，AlphaGo发挥出色到可以说为，稳健到让柯洁想玉碎都找不到…"
+    }],
+		"interfaceNotes": [{
+      "describe": "状态改变",
+      "date": "2019-04-22",
+      "time": "17：02",
+      "modifier": "审核人3",
+			"beforeStatus": "审核中",
+			"nowStatus": "审核通过"
+    },{
+      "describe": "状态改变",
+      "date": "2019-04-22",
+      "time": "17：02",
+      "modifier": "审核人3",
+			"beforeStatus": "审核中",
+			"nowStatus": "审核通过"
+    },{
+      "describe": "状态改变",
+      "date": "2019-04-22",
+      "time": "17：02",
+      "modifier": "审核人3",
+			"beforeStatus": "审核中",
+			"nowStatus": "审核通过"
+    }]
+  }
+}

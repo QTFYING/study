@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <script src="../js/jquery-2.1.1.min.js"></script>
+</head>
+
+<body>
+    <div>
+        选择城市：
+        <select id="city" onchange="changeSelect(this.selectedIndex)"> </select>
+    </div>
+    <div>
+        选择学校：
+        <select id="school"> </select>
+    </div>
+    <script>
+        $.ajax({
+            //请求方式为get
+            type: "GET",
+            //json文件位置
+            url: "../json/school.json",
+            //返回数据格式为json
+            dataType: "json",
+            //请求成功完成后要执行的方法
+            success: function (data) {
+                // console.log(data);
+
+                var temp;
+                for (var item in data) {
+                    temp += "<option id = " + data[item].id + " >" + data[item].name + "</option>";
+                    console.log(data[item].id + '--------' + data[item].name + '----------------省份');
+                    var arr_province = data[item].name;
+                    var a = data[item].school;
+                    for (let i in a) {
+                        console.log(a[i].name);
+                    }
+                };
+
+                $("#city").append(temp);
+            }
+        })
+
+        var index = $("#city").get(0).selectedIndex;
+
+        function changeSelect(index) {
+            console.log(index);
+            $.ajax({
+                //请求方式为get
+                type: "GET",
+                //json文件位置
+                url: "../json/school.json",
+                //返回数据格式为json
+                dataType: "json",
+                //请求成功完成后要执行的方法
+                success: function (data) {
+                    console.log(data);
+                    console.log(data[index].id + '--------' + data[index].name);
+                    var a = data[index].school;
+                    var tpl;
+                    for (var i in a) {
+                        console.log(a[i].name);
+                        tpl += "<option>" + a[i].name + "</option>";
+                    }
+                    $("#school").append(tpl);
+
+                }
+            })
+        }
+    </script>
+
+</body>
+
+</html>

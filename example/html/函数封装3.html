@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+</head>
+
+<body>
+    <script type="text/javascript">
+        /**
+         * 使用约定优先的原则，把所有的私有变量都使用_开头
+         */
+        var Person = function (no, name, age) {
+            this.setNo(no);
+            this.setName(name);
+            this.setAge(age);
+        }
+        Person.prototype = {
+            constructor: Person,
+            checkNo: function (no) {
+                if (!no.constructor == "string" || no.length != 4)
+                    throw new Error("学号必须为4位");
+            },
+            setNo: function (no) {
+                this.checkNo(no);
+                this._no = no;
+            },
+            getNo: function () {
+                return this._no;
+            },
+            setName: function (name) {
+                this._name = name;
+            },
+            getName: function () {
+                return this._name;
+            },
+            setAge: function (age) {
+                this._age = age;
+            },
+            getAge: function () {
+                return this._age;
+            },
+            toString: function () {
+                return "no = " + this._no + " , name = " + this._name + " , age = " + this._age;
+            }
+        };
+        var p1 = new Person("0001", "鸿洋", "22");
+        console.log(p1.toString()); //no = 0001 , name = 鸿洋 , age = 22
+        p1.setNo("0003");
+        console.log(p1.toString()); //no = 0003 , name = 鸿洋 , age = 22
+        p1._no = "0004";
+        console.log(p1.toString()); //no = 0004 , name = 鸿洋 , age = 22
+    </script>
+</body>
+
+</html>

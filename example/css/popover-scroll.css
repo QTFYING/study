@@ -1,0 +1,68 @@
+.top-popover {
+  /* 右上角popover*/
+  position: fixed;
+  right: .36rem;
+}
+.popover {
+  width: 2.14rem;
+}
+.popover .popover-arrow {
+  z-index: 1000;
+  width: 100%;
+  height: .5656rem;
+  overflow: hidden;
+  position: relative;
+  top: -0.2828rem;
+}
+.popover .popover-arrow:after {
+  position: absolute;
+  top: .36rem;
+  right: .28rem;
+  width: .4rem;
+  height: .4rem;
+  content: ' ';
+  -webkit-transform: rotate(45deg);
+  transform: rotate(45deg);
+  border-radius: .06rem;
+  background: #f7f7f7;
+}
+.popover .popover-wrapper {
+  margin-top: -0.2828rem;
+  padding: .16rem 0;
+  border-radius: .14rem;
+  background-color: #fff;
+}
+.popover .popover-wrapper .scroll-wrapper {
+  height: 3.04rem;
+  position: relative;
+  overflow: hidden;
+}
+.popover .popover-wrapper .scroll-wrapper .popover-scroll {
+  position: absolute;
+  width: 100%;
+}
+.popover .popover-wrapper .scroll-wrapper .popover-scroll .popover-table-view .popover-table-view-cell {
+  height: .76rem;
+  line-height: .76rem;
+  text-align: center;
+  font-size: .28rem;
+  color: #5A98D2;
+}
+.popover .popover-wrapper .scroll-wrapper .popover-scroll .popover-table-view .popover-table-view-cell a {
+  display: block;
+  width: 100%;
+}
+.popover .popover-wrapper .scroll-wrapper .popover-scroll .popover-table-view .popover-table-view-cell a:hover {
+  background-color: #f0f0f0;
+  cursor: pointer;
+}
+.popover .popover-wrapper .scroll-wrapper .popover-scroll .popover-table-view .popover-table-view-cell a:active {
+  background-color: #dedede;
+}
+.popover .popover-wrapper .scroll-wrapper .scrollDiv {
+  width: 3px;
+  top: 0;
+  right: 0;
+  position: absolute;
+  background: #999999;
+}

@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <script src="../js/jquery-2.1.1.min.js"></script>
+</head>
+
+<body>
+    <div id="test">
+
+    </div>
+
+    <script language="javascript">
+        var arr1 = ['A', 'B', 'C', 'D'];
+        var arr2 = ['B', 'D', 'Y'];
+
+        var temp = '';
+        for( var j = 0; j < arr1.length; j++) {
+            console.log(arr1[j]);
+            for (k = 0; k < arr2.length; k++) {
+                if(arr1[j] == arr2[k]) {
+                    console.log('jjjjjjjjjjjjjjjjjjjjjjjjj' + arr2[k])
+                }
+            }
+            temp += '<li>' + arr1[j] + '</li>';
+        }
+
+        $('#test').html(temp);
+
+        var long = arr1.length < arr2.length ? arr2 : arr1;
+        var short = arr1.length < arr2.length ? arr1 : arr2;
+        var str = "," + long.toString() + ",";
+        console.log('打印', str);
+        
+        var result = [];
+        for (var i in short) {
+            if (str.indexOf("," + short[i] + ",") >= 0) {
+                result.push(short[i]);
+            }
+        }
+
+        console.log(result.length);
+        var h = result.toString();
+        console.log('h----' + h );
+
+        for(k = 0; k < result.length; k++) {
+         console.log(result[k]); 
+         $("li:contains("+result[k]+")").css("background-color","#B2E0FF");
+        }
+
+    </script>
+</body>
+
+</html>

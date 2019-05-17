@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+</head>
+
+<body>
+    <button id="1">1t</button>
+    <button id="2">2t</button>
+    <button id="3">3t</button>
+</body>
+<script src="../js/jquery-2.1.1.min.js"></script>
+<script>
+    var Person = (function(window) {
+        var Person = function(name) {
+            return new Person.fn.init(name);
+        }
+
+        Person.fn = Person.prototype = {
+            constructor: Person,
+            init: function(name) {
+                this.name = name;
+                this.sayHello = function() {
+                    this.makeArray();
+                }
+            },
+            makeArray: function() {
+                console.log(this.name);
+            }
+        }
+
+        Person.fn.init.prototype = Person.fn;
+
+        return Person;
+    })();
+
+
+    var p = Person('pawn');
+    console.log(p);
+    p.sayHello();
+</script>
+
+</html>
