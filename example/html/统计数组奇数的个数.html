@@ -4,21 +4,13 @@
     <title>测试专用</title>
 </head>
 <body>
-    <button class="btn">
-        点击1
-    </button>
-
-    <button class="btn1">
-        点击2
-    </button>
-
-    <script src="./js/jquery-2.1.1.min.js"></script>
+    <script src="../js/jquery-2.1.1.min.js"></script>
 
     <script>
-        const arrayOfIntegers = [1, 4, 5, 9, 0, -1, 5];
+        const arrayOfIntegers = [1, 4, 5, 9, 0, -1, 5, 7];
 
         let counter = 0;
-
+        // Math.abs(num) 返回num的绝对值
         arrayOfIntegers.forEach((integer) => {
             const remainder = Math.abs(integer % 2);
             counter += remainder;
