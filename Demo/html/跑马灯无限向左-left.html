@@ -1,0 +1,63 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta content="width=device-width,minimum-scale=1.0,maximum-scale=1.0,user-scalable=no,minimal-ui" name="viewport"/>
+<title>文字从右往左无限滚动 支持PC，移动端-幸凡学习网</title>
+<style>
+body,p{margin:0;padding:0;}
+.scroll_area{background:#f2f2f2;padding:0 10px;width:320px;margin:0 auto;}
+.scroll_area .content{overflow:hidden;position:relative;color:#666;height:50px;line-height:50px;margin-bottom:10px;}
+.scroll_area .scrolltxt{position:absolute;left:0;top:0;white-space:nowrap;}
+.scroll_area .scrolltxt div{display:inline-block;}
+</style>
+</head>
+<body>
+
+<div class="scroll_area"> <!--目标体-->
+	<div class="content"> <!-- 显示容器 -->
+		<div class="scrolltxt"> <!-- 滚动体 -->
+			<span>秦时明月汉时关，万里长征人未还1</span>
+			<span>秦时明月汉时关，万里长征人未还2</span>
+    </div>
+  </div>
+</div>
+<script src="http://code.jquery.com/jquery-2.1.1.min.js"></script>
+<script>
+	var obj = $('.scroll_area');
+	var dw = obj.find(".content").width();
+	var cw = obj.find(".scrolltxt").width();
+	var cx = 0;
+	//宽度超出当前content宽度才滚动
+	if (cw > dw) {
+		var scrollval = null;//滚动事件变量
+		obj.find(".scrolltxt").eq(0).append(obj.find(".scrolltxt").eq(0).html());
+		scrollval = setInterval(function () {
+			obj.find(".scrolltxt").eq(0).css({
+				"left": "-" + cx + "px"
+			})
+			if (cx > (cw - dw) + dw)
+				cx = 0;
+			cx ++;
+		}, 30);
+
+		//鼠标移入
+		$(obj).mousemove(function(){
+			clearInterval(scrollval);
+		})
+
+		//鼠标离开
+		$(obj).mouseleave(function(){
+			scrollval = setInterval(function(){
+				obj.find(".scrolltxt").eq(0).css({
+						"left": "-" + cx + "px"
+					})
+					if(cx > (cw - dw) + dw)
+					cx = 0;
+					cx ++;
+				}, 30);
+		})
+	};
+</script>
+</body>
+</html>

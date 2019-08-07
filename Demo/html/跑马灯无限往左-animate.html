@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <title>滚动字幕</title>
+  <div id="affiche">
+    <div class="affiche_text">
+      <span> 测试文案测试文案1 </span>
+      <span> 测试文案测试文案2 </span>
+      <span> 测试文案测试文案3 </span>
+      <span> 测试文案测试文案4 </span>
+    </div>
+  </div> 
+</head>
+<style>
+  #affiche {
+    color: red;
+    display: block;
+    width: 96%;
+    height: 30px;
+    margin: 0 auto;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .affiche_text {
+    position: absolute;
+    top: 0;
+    left: 100%;
+    line-height: 30px;
+    display: block;
+    word-break: keep-all;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+</style>
+
+<script src="https://cdn.bootcss.com/jquery/3.2.1/jquery.js"></script>
+<script type="text/javascript">
+  (function () { var timer = setTimeout(this.marquee, 1000); }());
+  function marquee() {
+    var scrollWidth = $('#affiche').width();
+    var textWidth = $('.affiche_text').width();
+    var i = scrollWidth;
+    setInterval(function () {
+      i--;
+      if (i < -textWidth) {
+        i = scrollWidth;
+      }
+      $('.affiche_text').animate({ 'left': i + 'px' }, 20);
+    }, 20);
+  }
+</script>
+
+</html>
