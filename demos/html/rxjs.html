@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8" />
+    <title>Hello Rxjs!</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/rxjs/7.8.1/rxjs.umd.min.js"></script>
+</head>
+
+<body>
+    <script type="text/javascript">
+        const { Observable, catchError, of, throwError, finalize, interval, map, retryWhen, tap, delayWhen, timer } = rxjs;
+
+        const result = interval(1000).pipe(
+            map((value) => {
+                if (value > 3) throw value;
+                return value;
+            }),
+            retryWhen((errors) => {
+                // 失败后，等待3秒后再重试
+                return errors.pipe(tap((value) => console.log(`Value ${value} was too high!`)), delayWhen(() => timer(3000)))
+            })
+        );
+
+        result.subscribe((value) =>
+            console.log(`value: ${value}, current seconds: ${new Date().getSeconds()}`)
+        );
+
+        const observable = new Observable((subscriber) => {
+            subscriber.next(1);
+            subscriber.next(2);
+            subscriber.error('值不能大于2');
+            subscriber.next(3);
+            subscriber.complete();
+        });
+
+        observable.pipe(
+            catchError((err) => {
+                console.log('catchError', err);
+                return throwError(() => err);
+            }), catchError((err) => {
+                console.log('catchError', err);
+                return of('-');
+            }), finalize(() => {
+                console.log('---------------');
+            }),).subscribe({
+                next(x) {
+                    console.log('该项值: ' + x);
+                },
+                error(err) {
+                    console.error('该项执行出错: ' + err);
+                },
+                complete() {
+                    console.log('程序结束！');
+                },
+            });
+    </script>
+</body>
+
+</html>
