@@ -14,10 +14,12 @@
 
     <div id="example"></div>
     <script type="text/babel">
-        function App() {
-            const [count, setCount] = React.useState(0);
+        const { useRef, useEffect, useState } = React;
 
-            React.useEffect(() => {
+        function App() {
+            const [count, setCount] = useState(0);
+
+            useEffect(() => {
                 document.title = `You clicked ${count} times`;
                 console.log(`You clicked ${count} times`)
             }, [count]);
