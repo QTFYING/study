@@ -1,13 +1,15 @@
-const gulp = require('gulp');
-const babel = require('gulp-babel');
-const browserSync = require('browser-sync').create();
-const uglify = require('gulp-uglify');
+const gulp = require('gulp'),
+      babel = require('gulp-babel'),
+      browserSync = require('browser-sync').create(),
+      uglify = require('gulp-uglify'),
+      ts = require('gulp-typescript');
 
 // 定义编译 JavaScript 文件的任务
 gulp.task('scripts', function () {
-  return gulp.src('src/*.js')
-    .pipe(babel()) // 使用 .babelrc 中的配置
-    .pipe(uglify()) // 压缩文件
+  return gulp.src('src/*.ts')
+    // .pipe(babel()) // 使用 .babelrc 中的配置
+    .pipe(ts({noImplicitAny: true}))
+    // .pipe(uglify()) // 压缩文件
     .pipe(gulp.dest('dist'));
 });
 
