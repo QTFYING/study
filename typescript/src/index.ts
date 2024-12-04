@@ -1,21 +1,23 @@
-var a: number = 1;
-var b: number = 2;
-
-console.log(a)
-
-
-function myDecorator(target:any, propertyKey:string, descriptor:PropertyDescriptor) {
-  console.log(`Decorator applied to ${propertyKey} on ${target.constructor.name}`);
-  // 你可以在这里修改 descriptor 或执行其他逻辑
-  return descriptor;
+function desc(target, name) {
+  console.log('---------------类属性装饰器的参数 start------------------');
+  console.log('target', target, target?.constructor); // 表示类的原型
+  console.log('name', name); // 表示被装饰属性名
+  console.log('---------------类属性装饰器的参数 end------------------');
 }
 
-class MyClass {
-  @myDecorator
-  myMethod() {
-    console.log('My method is called!');
+
+class Person {
+  public name: string | undefined;
+  public age: number | 0;
+
+  @desc
+  private gender: string | undefined;
+
+  constructor(name, age) {
+    this.name = name;
+    this.age = age;
   }
 }
 
-const instance = new MyClass();
-instance.myMethod();
+let p = new Person('哈哈', 20);
+console.log(p);
