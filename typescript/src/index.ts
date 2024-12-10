@@ -5,7 +5,6 @@ function desc(target, name) {
   console.log('---------------类属性装饰器的参数 end------------------');
 }
 
-
 class Person {
   public name: string | undefined;
   public age: number | 0;
