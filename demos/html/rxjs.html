@@ -26,34 +26,34 @@
             console.log(`value: ${value}, current seconds: ${new Date().getSeconds()}`)
         );
 
-        const observable = new Observable((subscriber) => {
-            subscriber.next(1);
-            subscriber.next(2);
-            subscriber.error('值不能大于2');
-            subscriber.next(3);
-            subscriber.complete();
-        });
+        // const observable = new Observable((subscriber) => {
+        //     subscriber.next(1);
+        //     subscriber.next(2);
+        //     subscriber.error('值不能大于2');
+        //     subscriber.next(3);
+        //     subscriber.complete();
+        // });
 
-        observable.pipe(
-            catchError((err) => {
-                console.log('catchError', err);
-                return throwError(() => err);
-            }), catchError((err) => {
-                console.log('catchError', err);
-                return of('-');
-            }), finalize(() => {
-                console.log('---------------');
-            }),).subscribe({
-                next(x) {
-                    console.log('该项值: ' + x);
-                },
-                error(err) {
-                    console.error('该项执行出错: ' + err);
-                },
-                complete() {
-                    console.log('程序结束！');
-                },
-            });
+        // observable.pipe(
+        //     catchError((err) => {
+        //         console.log('catchError', err);
+        //         return throwError(() => err);
+        //     }), catchError((err) => {
+        //         console.log('catchError', err);
+        //         return of('-');
+        //     }), finalize(() => {
+        //         console.log('---------------');
+        //     }),).subscribe({
+        //         next(x) {
+        //             console.log('该项值: ' + x);
+        //         },
+        //         error(err) {
+        //             console.error('该项执行出错: ' + err);
+        //         },
+        //         complete() {
+        //             console.log('程序结束！');
+        //         },
+        //     });
     </script>
 </body>
 
