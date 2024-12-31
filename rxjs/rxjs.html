@@ -9,11 +9,11 @@
 
 <body>
     <script type="text/javascript">
-        const { Subject, catchError, of, throwError, tap, delayWhen, timer, map, retryWhen, switchMap, takeUntil, cathError, take } = rxjs;
+        const { Subject, of, throwError, timer, switchMap, takeUntil } = rxjs;
 
         function mockApiRequest() {
             return new Promise((resolve, reject) => {
-                const isSuccess = Math.random() > 0.5;
+                const isSuccess = Math.random() > 0.7;
 
                 setTimeout(() => {
                     if (isSuccess) {
@@ -22,7 +22,7 @@
                         reject({ code: '0001', error: '请求失败' });
                     }
                 }, 1000);
-            })
+            });
         }
 
         const stopPolling$ = new Subject();
@@ -34,33 +34,27 @@
             const attemptRequest = () => {
                 return apiFunc().then(data => {
                     stopPolling$.next(data); // 成功则停止
-                    return data;
+                    console.log(`请求成功，停止轮询, 返回数据: ${JSON.stringify(data, null, 2)}`);
+                    return data; // 返回成功的数据
                 }).catch(err => {
                     retries++;
-                    if (retries >= maxRetries) {
-                        throw new Error('重试次数已达上限');
-                    } else {
-                        setTimeout(attemptRequest, delay);
-                    }
                     console.log(`第${retries}次重试失败`, err);
-                    return new Promise(resolve => {
-                        setTimeout(() => {
-                            delay = Math.min(delay + 1000, 10000);
-                            console.log(`正在进行第${retries + 1}次重试，延迟${delay / 1000}秒...`);
-                            resolve(attemptRequest());
-                        }, delay);
-                    });
-                })
+                    if (retries >= maxRetries) {
+                        return throwError(new Error('重试次数已达上限')); // 抛出错误
+                    }
+                    delay = Math.min(delay + 1000, 10000); // 每次失败后延长延迟
+                    console.log(`正在进行第${retries + 1}次重试，延迟${delay / 1000}秒...`);
+                    return timer(delay).pipe(
+                        switchMap(() => attemptRequest()) // 使用 RxJS 重新尝试
+                    ).toPromise(); // 转换为 Promise
+                });
             };
 
             return attemptRequest();
         }
 
-
         const initialRequest$ = of(null).pipe(
-            switchMap(() => {
-                return startPolling(mockApiRequest);
-            }),
+            switchMap(() => startPolling(mockApiRequest)),
             takeUntil(stopPolling$)
         );
 
@@ -70,7 +64,7 @@
             },
             error: err => {
                 console.log('请求失败', err);
-            },
+            }
         });
 
         // 停止轮询的逻辑（例如在 30 秒后停止）
