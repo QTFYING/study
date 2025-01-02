@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>Hello Rxjs!</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/rxjs/7.8.1/rxjs.umd.min.js"></script>
+</head>
+
+<body>
+    <script type="text/javascript">
+        const { Observable, Subject, of, timer, switchMap, takeUntil, retryWhen, mergeMap } = rxjs;
+
+        function mockApiRequest() {
+            return new Observable(observer => {
+                const isSuccess = Math.random() > 0.7; // 降低失败概率以更容易观察成功请求
+
+                setTimeout(() => {
+                    if (isSuccess) {
+                        observer.next({ code: '0000', data: Math.random() });
+                        observer.complete();
+                    } else {
+                        observer.error(new Error('请求失败'));
+                    }
+                }, 1000);
+            });
+        }
+
+        const stopPolling$ = new Subject();
+
+        function startPolling(apiFunc, maxRetries = 10, initialDelay = 2000) {
+            return apiFunc().pipe(
+                retryWhen(errors =>
+                    errors.pipe(
+                        mergeMap((error, count) => {
+                            if (count >= maxRetries) {
+                                throw error;
+                            }
+                            const backoff = Math.min(initialDelay + count * 1000, 10000); // 指数退避策略
+                            console.log(`第${count + 1}次重试失败，将在${backoff / 1000}秒后重试...`);
+                            return timer(backoff);
+                        })
+                    )
+                ),
+                takeUntil(stopPolling$)
+            );
+        }
+
+        const initialRequest$ = of(null).pipe(
+            switchMap(() => startPolling(mockApiRequest))
+        );
+
+        const subscription = initialRequest$.subscribe({
+            next: data => {
+                console.log('请求成功', data);
+            },
+            error: err => {
+                console.log('请求最终失败', err);
+            }
+        });
+    </script>
+</body>
+
+</html>

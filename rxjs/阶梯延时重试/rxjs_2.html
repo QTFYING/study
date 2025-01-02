@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8" />
+    <title>Hello Rxjs!</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/rxjs/7.8.1/rxjs.umd.min.js"></script>
+</head>
+
+<body>
+    <script type="text/javascript">
+
+        const { Subject, of, throwError, timer, switchMap, takeUntil, retryWhen, from, concatMap, delay, tap } = rxjs;
+
+        function mockApiRequest() {
+            return new Promise((resolve, reject) => {
+                const isSuccess = Math.random() > 0.7;
+
+                setTimeout(() => {
+                    if (isSuccess) {
+                        resolve({ code: '0000', data: Math.random() });
+                    } else {
+                        reject({ code: '0001', error: '请求失败' });
+                    }
+                }, 1000);
+            });
+        }
+
+        const stopPolling$ = new Subject();
+
+        function startPolling(apiFunc, maxRetries = 10, initialDelay = 2000) {
+            return from(apiFunc()).pipe(
+                retryWhen(errors =>
+                    errors.pipe(
+                        concatMap((error, count) => {
+                            if (count >= maxRetries) {
+                                return throwError(new Error('重试次数已达上限')); // 返回错误
+                            }
+                            const backoff = Math.min(initialDelay + count * 1000, 10000);
+                            console.log(`第${count + 1}次重试失败，将在${backoff / 1000}秒后重试...`);
+                            return timer(backoff).pipe(switchMap(() => from(apiFunc())));
+                            /* 一种错误写法，该写法的问题是在重试的逻辑中，它仅仅是订阅了上下文中返回的error，而没有真正地去执行重试逻辑，所以永远返回的是最初的失败结果
+                            return of(error).pipe(
+                                delay(Math.min(initialDelay + count * 1000, 10000)),
+                                tap(() => console.log(`正在进行第${count + 1}次重试，延迟${Math.min(initialDelay + count * 1000, 10000) / 1000}秒...`))
+                            ) */
+                        }
+                        )
+                    )
+                ),
+                takeUntil(stopPolling$)
+            );
+        }
+
+        const initialRequest$ = of(null).pipe(
+            switchMap(() => startPolling(mockApiRequest))
+        );
+
+        const subscription = initialRequest$.subscribe({
+            next: data => {
+                console.log('请求成功', data);
+            },
+            error: err => {
+                console.log('请求失败', err);
+            }
+        });
+    </script>
+</body>
+
+</html>
