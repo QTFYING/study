@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Custom Element Example</title>
+</head>
+
+<body>
+    <!-- 使用自定义元素 -->
+    <my-greeting>
+        <span>我是自定义标签内部的内容</span>
+    </my-greeting>
+
+    <script>
+        // 定义自定义元素类
+        class MyGreeting extends HTMLElement {
+            constructor() {
+                super(); // 必须首先调用super()
+                // 创建一个shadow root并启用slot机制
+                const container = this.attachShadow({ mode: 'open' });
+
+                // 在shadow root中添加模板内容
+                const template = document.createElement('template');
+                template.innerHTML = `
+                    <style>
+                        :host {
+                            display: block;
+                            border: 1px solid #ccc;
+                            padding: 10px;
+                            border-radius: 5px;
+                        }
+                        .greeting-content {
+                            font-size: 24px;
+                            color: blue;
+                        }
+                    </style>
+                    <div class="greeting-content">
+                        <!-- 使用<slot>元素来投影父组件的内容 -->
+                        <slot></slot>
+                    </div>
+                `;
+                container.appendChild(template.content.cloneNode(true));
+            }
+        }
+
+        // 注册自定义元素
+        customElements.define('my-greeting', MyGreeting);
+    </script>
+</body>
+
+</html>

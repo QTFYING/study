@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8" />
+    <title>LULU UI!</title>
+    <script src="https://lf26-cdn-tos.bytecdntp.com/cdn/expire-1-M/react/18.2.0/umd/react.production.min.js"></script>
+    <script
+        src="https://lf3-cdn-tos.bytecdntp.com/cdn/expire-1-M/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+    <script src="https://lf9-cdn-tos.bytecdntp.com/cdn/expire-1-M/babel-standalone/6.26.0/babel.min.js"></script>
+
+    <link rel="stylesheet" href="https://unpkg.com/lu2/theme/edge/css/common/ui.css">
+    <script type="module" src="https://unpkg.com/lu2/theme/edge/js/common/all.js"></script>
+</head>
+
+<body>
+
+    <div id="example"></div>
+    <script type="text/babel">
+        const { useState, useRef, useEffect, useLayoutEffect, createRef } = React;
+
+
+
+        function App() {
+            const [count, setCount] = useState(0);
+            const myRef = React.createRef();
+
+            // 传参，此时 myRef.current 就是组件元素
+            const data = [{
+                value: '蔡伦',
+                userid: 1
+            }, {
+                value: '郭敬明',
+                userid: "5"
+            }, {
+                value: '彭玉乐',
+                userid: 7
+            }];
+
+            useLayoutEffect(() => {
+                if (myRef.current.isConnectedCallback) {
+                    myRef.current.params.data = data;
+                } else {
+                    myRef.current.addEventListener('connected', function () {
+                        this.params.data = data
+                    });
+                }
+            }, []);
+
+            const showValue = (e) => {
+                console.log(`选中的值是：${e.target.value}`);
+            }
+
+
+            const showDialog = (e) => {
+                new Dialog().alert('温馨提醒');
+            }
+
+            return (
+                <div>
+                    <select is="ui-select" defaultValue={3} onChange={showValue}>
+                        <option value="1" disabled>选项1</option>
+                        <option value="2">选项2</option>
+                        <option value="3">选项3</option>
+                    </select>
+
+                    <input class="ui-input" results="5" is="ui-datalist" ref={myRef} />
+
+                    <button type="primary" is="ui-button" onClick={showDialog}>弹框</button>
+                </div>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById("example"));
+        // 渲染 React 组件到 DOM
+        root.render(<App />);
+    </script>
+
+</body>
+
+</html>

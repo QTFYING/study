@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8" />
+    <title>Hello Vue!</title>
+    <script src="./user-registration.js" defer></script>
+    <script src="https://cdn.staticfile.net/vue/3.2.36/vue.global.min.js"></script>
+    <script src="https://lf9-cdn-tos.bytecdntp.com/cdn/expire-1-M/babel-standalone/6.26.0/babel.min.js"></script>
+</head>
+
+<body>
+
+    <div id="app">
+        <user-registration></user-registration>
+        <button @click="count++">{{ count }}</button>
+    </div>
+
+
+    <script type="text/babel">
+        const { createApp, ref } = Vue;
+
+        const app = createApp({
+            setup() {
+                const count = ref(0);
+                function increment() {
+                    count.value++;
+                };
+                return { count, increment };
+            }
+        });
+
+        app.mount('#app')
+    </script>
+
+</body>
+
+</html>

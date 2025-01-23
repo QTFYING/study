@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8" />
+    <title>Hello React!</title>
+    <link rel="stylesheet" href="https://unpkg.com/lu2/theme/edge/css/common/ui.css">
+    <script src="https://lf26-cdn-tos.bytecdntp.com/cdn/expire-1-M/react/18.2.0/umd/react.production.min.js"></script>
+    <script src="./user-registration.js" defer></script>
+    <script
+        src="https://lf3-cdn-tos.bytecdntp.com/cdn/expire-1-M/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+    <script src="https://lf9-cdn-tos.bytecdntp.com/cdn/expire-1-M/babel-standalone/6.26.0/babel.min.js"></script>
+    <script type="module" src="https://unpkg.com/lu2/theme/edge/js/common/all.js"></script>
+</head>
+
+<body>
+
+    <div id="app"></div>
+
+    <script type="text/babel">
+        const { useRef, useEffect, useState } = React;
+
+        function App() {
+            const [count, setCount] = useState(0);
+
+            useEffect(() => {
+                document.title = `You clicked ${count} times`;
+                console.log(`You clicked ${count} times`)
+            }, [count]);
+
+            return (
+                <div>
+                    <h1>计数器：{count}</h1>
+                    <button type="primary" class="ui-button" onClick={() => setCount(count + 1)}>增加</button>
+                    <user-registration></user-registration>
+                </div>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById("app"));
+        // 渲染 React 组件到 DOM
+        root.render(<App />);
+    </script>
+
+</body>
+
+</html>
