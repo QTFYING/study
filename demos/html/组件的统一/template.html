@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="UTF-8">
+  <title>声明式 shadow dom 示例</title>
+</head>
+
+<body>
+  <!-- 自定义组件的模板 -->
+  <count-button>
+    <template shadowrootmode="open">
+      <style>
+        button {
+          font-size: 16px;
+          padding: 10px 20px;
+        }
+      </style>
+
+      <button id="increment-btn">
+        点击次数：<span id="count">0</span>
+      </button>
+    </template>
+  </count-button>
+
+  <script>
+    // 定义自定义元素类
+    class CountButton extends HTMLElement {
+      constructor() {
+        super();
+
+        // 获取按钮和计数显示元素
+        this.button = this.shadowRoot.querySelector('#increment-btn');
+        this.countDisplay = this.shadowRoot.querySelector('#count');
+        this.count = 0; // 初始化计数
+
+        // 绑定事件处理程序
+        this.button.addEventListener('click', () => {
+          this.increment();
+        });
+      }
+
+      // 定义一个方法来增加计数
+      increment() {
+        this.count++;
+        this.countDisplay.textContent = this.count;
+      }
+    }
+
+    // 注册自定义元素
+    customElements.define('count-button', CountButton);
+  </script>
+</body>
+
+</html>
