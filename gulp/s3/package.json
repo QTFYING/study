@@ -1,0 +1,16 @@
+{
+  "name": "aws-s3",
+  "version": "1.0.0",
+  "description": "将现有文件分包上传至aws的存储桶的脚本",
+  "main": "gulp.js",
+  "scripts": {
+    "start": "gulp",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "del": "^8.0.0",
+    "gulp": "^5.0.0"
+  }
+}
