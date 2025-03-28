@@ -6,45 +6,46 @@ const fs = require('fs');
 const https = require('https');
 const unzipper = require('unzipper');
 const s3 = require('gulp-s3');
-const AWS = require('aws-sdk');
+const aws = require('aws-sdk');
 
 // const OSS = require('ali-oss'); // 如果只做阿里云，可以引入这个SDK
 
 // 配置对象
-const config = {
+const base_config = {
   srcDir: 'dist',
   destDir: 'static',
   htmlDestDir: path.join('static', 'html'),
-  jsDestDir: path.join('static', 'js'),
-  zipUrl: 'https://package.itcjf.com/packages/tibet-airline-oss/1686808649248/tibet-airline-oss-1686808649248.zip', // 替换为实际的 ZIP 包 URL
+  jsDestDir: path.join('static', 'source'),
+  zipUrl: '', // 替换为实际的 ZIP 包 URL
   zipDest: 'temp.zip', // 临时存储 ZIP 包的路径
+  root: ''  // 存储桶的根路径
 };
 
-// S3 配置（兼容 AWS 和阿里云 OSS）
-const S3_CONFIG = {
-  key: 'LTAI5tL2R34C8vgNmaG5fkaF', // 替换为你的 Access Key
-  secret: 'IXooBvcuKzaEAJSPLwPXfNzGBdXwQU', // 替换为你的 Secret Key
-  bucket: 'qa-tibetairlines', // 替换为你的存储桶名称
-  region: 'oss-cn-chengdu', // 替换为你的区域
+// S3 配置（兼容 aws 和阿里云 OSS）
+const s3_config = {
+  key: '', // 替换为你的 Access Key
+  secret: '', // 替换为你的 Secret Key
+  bucket: '', // 替换为你的存储桶名称
+  region: '', // 替换为你的区域
 };
 
-const s3Client = new AWS.S3({
-  accessKeyId: S3_CONFIG.key,
-  secretAccessKey: S3_CONFIG.secret,
-  endpoint: `https://${S3_CONFIG.region}.aliyuncs.com`, // 阿里云 OSS 的 endpoint
-  region: S3_CONFIG.region, // 区域
+const s3Client = new aws.S3({
+  accessKeyId: s3_config.key,
+  secretAccessKey: s3_config.secret,
+  endpoint: `https://${s3_config.region}.aliyuncs.com`, // 阿里云 OSS 的 endpoint
+  region: s3_config.region, // 区域
   signatureVersion: 'v4', // 使用 S3 兼容的签名版本
 });
 
 // 检查 dist 目录是否存在
 async function ensureDistExists(cb) {
-  if (!fs.existsSync(config.srcDir)) {
+  if (!fs.existsSync(base_config.srcDir)) {
     console.log('dist 目录不存在，开始下载 ZIP 包...');
-    await downloadZip(config.zipUrl, config.zipDest);
+    await downloadZip(base_config.zipUrl, base_config.zipDest);
     console.log('ZIP 包下载完成，开始解压...');
-    await extractZip(config.zipDest, config.srcDir);
+    await extractZip(base_config.zipDest, base_config.srcDir);
     console.log('解压完成');
-    fs.unlinkSync(config.zipDest); // 删除临时 ZIP 文件
+    fs.unlinkSync(base_config.zipDest); // 删除临时 ZIP 文件
   } else {
     console.log('dist 目录已存在，跳过下载');
   }
@@ -88,23 +89,23 @@ function extractZip(zipPath, destDir) {
 // 清理目标目录
 async function clean(cb) {
   const del = (await import('del')).deleteSync; // 动态导入 del 模块
-  del([config.destDir]);
+  del([base_config.destDir]);
   cb();
 }
 
 // Gulp任务：打包HTML文件
 function htmlPack(cb) {
-  gulp.src(path.join(config.srcDir, '**/index.html'), { base: config.srcDir })
+  gulp.src(path.join(base_config.srcDir, '**/index.html'), { base: base_config.srcDir })
     .pipe(plumber())
-    .pipe(gulp.dest(config.htmlDestDir))
+    .pipe(gulp.dest(base_config.htmlDestDir))
     .on('end', cb);
 }
 
-// Gulp任务：打包JavaScript文件
+// Gulp任务：打包非HTML文件
 function staticPack(cb) {
-  gulp.src([path.join(config.srcDir, '**/*'), `!${path.join(config.srcDir, '**/*.html')}`], { base: config.srcDir })
+  gulp.src([path.join(base_config.srcDir, '**/*'), `!${path.join(base_config.srcDir, '**/*.html')}`], { base: base_config.srcDir })
     .pipe(plumber())
-    .pipe(gulp.dest(config.jsDestDir))
+    .pipe(gulp.dest(base_config.jsDestDir))
     .on('end', cb);
 }
 
@@ -112,7 +113,7 @@ function staticPack(cb) {
 function uploadToS3Async(src, uploadPath) {
   return new Promise((resolve, reject) => {
     gulp.src(src)
-    .pipe(s3({...S3_CONFIG, endpoint: `${S3_CONFIG.region}.aliyuncs.com`}, {
+    .pipe(s3({...s3_config, endpoint: `${s3_config.region}.aliyuncs.com`}, {
       uploadPath, // 上传路径前缀
       headers: {
         'x-amz-acl': 'public-read',
@@ -132,8 +133,39 @@ function uploadToS3Async(src, uploadPath) {
 
 // 上传文件js至S3
 function uploadsJs3() {
-  const src = [path.join(config.destDir, '**/*'), `!${path.join(config.destDir, '**/*.html')}`];
-  return uploadToS3Async(src, 'tibet-upload');
+  const src = [path.join(base_config.destDir, '**/*'), `!${path.join(base_config.destDir, '**/*.html')}`];
+  return uploadToS3Async(src, base_config.root);
+}
+
+// 列出 S3 存储桶中所有以指定前缀开始的文件
+async function listAllObjects(bucket, prefix) {
+  let allObjects = [];
+  let isTruncated = true; // 是否还有更多对象
+  let continuationToken = null;
+
+  while (isTruncated) {
+    try {
+      const params = {
+        Bucket: bucket,
+        Prefix: prefix, // 指定前缀
+        ContinuationToken: continuationToken, // 用于获取下一页结果
+      };
+
+      const data = await s3Client.listObjectsV2(params).promise();
+
+      // 将当前页的对象添加到结果数组中
+      allObjects = allObjects.concat(data.Contents);
+
+      // 检查是否还有更多对象
+      isTruncated = data.IsTruncated;
+      continuationToken = data.NextContinuationToken; // 获取下一页的 ContinuationToken
+    } catch (err) {
+      console.error('获取 S3 对象列表失败:', err);
+      throw err;
+    }
+  }
+
+  return allObjects;
 }
 
 // 备份 S3 存储桶中的 html 文件夹到 html-back
@@ -142,70 +174,46 @@ async function backupHtml() {
 
   const today = new Date();
   const formattedDate = `${today.getFullYear()}${(today.getMonth() + 1).toString().padStart(2, '0')}${today.getDate().toString().padStart(2, '0')}`;
-  const backupFolder = `html-back-${formattedDate}/`; // 动态生成备份文件夹名称
+  const backupFolder = `html-back-${formattedDate}/`;
 
-  return new Promise((resolve, reject) => {
-    // 列出 S3 存储桶中 html 文件夹的所有文件
-    s3Client.listObjectsV2(
-      {
-        Bucket: S3_CONFIG.bucket,
-        Prefix: 'tibet-upload/html/', // 指定要备份的文件夹
-      },
-      (err, data) => {
-        if (err) {
-          console.error('列出 S3 对象失败:', err);
-          return reject(err);
-        }
+  try {
+    const allObjects = await listAllObjects(s3_config.bucket, `${base_config.root}/html/`);
 
-        console.log('列出的文件:', data); // 打印返回的文件列表
+    if (allObjects.length === 0) {
+      console.log('没有找到任何文件，备份终止');
+      return;
+    }
 
-        if (!data.Contents || data.Contents.length === 0) {
-          console.log('没有找到任何文件，备份终止');
-          return resolve(); // 如果没有文件，直接结束
-        }
+    const copyPromises = allObjects.map((file) => {
+      const sourceKey = file.Key;
+      const targetKey = sourceKey.replace('html/', backupFolder);
 
-        const copyPromises = data.Contents.map((file) => {
-          const sourceKey = file.Key;
-          const targetKey = sourceKey.replace('html/', backupFolder); // 替换路径为备份路径
+      return s3Client.copyObject({
+        Bucket: s3_config.bucket,
+        CopySource: `${s3_config.bucket}/${sourceKey}`,
+        Key: targetKey,
+      }).promise().then(() => {
+        console.log(`已备份文件: ${sourceKey} -> ${targetKey}`);
+      });
+    });
 
-          // 复制文件到 html-back 文件夹
-          return s3Client
-            .copyObject({
-              Bucket: S3_CONFIG.bucket,
-              CopySource: `${S3_CONFIG.bucket}/${sourceKey}`,
-              Key: targetKey,
-            })
-            .promise()
-            .then(() => {
-              console.log(`已备份文件: ${sourceKey} -> ${targetKey}`);
-            });
-        });
-
-        // 等待所有文件复制完成
-        Promise.all(copyPromises)
-          .then(() => {
-            console.log(`文件夹已成功备份到${backupFolder}`);
-            resolve();
-          })
-          .catch((copyErr) => {
-            console.error('备份 html 文件夹失败:', copyErr);
-            reject(copyErr);
-          });
-      }
-    );
-  });
+    await Promise.all(copyPromises);
+    console.log(`文件夹已成功备份到 ${backupFolder}`);
+  } catch (err) {
+    console.error('备份 html 文件夹失败:', err);
+  }
 }
 
 // 上传文件html至S3
-function uploadsHtml3(cb) {
-  const src = path.join(config.destDir, '**/*.html');
-  return uploadToS3Async(src, 'tibet-upload');
+function uploadsHtml3() {
+  const src = path.join(base_config.destDir, '**/*.html');
+  return uploadToS3Async(src, base_config.root);
 }
 
 // 文件监听任务
 function watchFiles() {
-  watch(path.join(config.srcDir, '**/*.html'), htmlPack);
-  watch([path.join(config.srcDir, '**/*'), `!${path.join(config.srcDir, '**/*.html')}`], staticPack);
+  watch(path.join(base_config.srcDir, '**/*.html'), htmlPack);
+  watch([path.join(base_config.srcDir, '**/*'), `!${path.join(base_config.srcDir, '**/*.html')}`], staticPack);
 }
 
 // 默认任务
