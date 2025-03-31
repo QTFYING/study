@@ -1,4 +1,3 @@
-const { series, watch, parallel } = require('gulp');
 const gulp = require('gulp');
 const path = require('path');
 const plumber = require('gulp-plumber');
@@ -7,15 +6,17 @@ const https = require('https');
 const unzipper = require('unzipper');
 const s3 = require('gulp-s3');
 const aws = require('aws-sdk');
+const dayjs = require('dayjs');
+const { series, watch, parallel } = gulp;
 
 // const OSS = require('ali-oss'); // 如果只做阿里云，可以引入这个SDK
 
 // 配置对象
 const base_config = {
-  srcDir: 'dist',
-  destDir: 'static',
-  htmlDestDir: path.join('static', 'html'),
-  jsDestDir: path.join('static', 'source'),
+  srcDir: 'dist',  // 目标文件夹
+  destDir: 'static', // 输入文件夹
+  htmlDestDir: path.join('static', 'html'), // html静态资源在文件夹位置
+  jsDestDir: path.join('static', 'cssjs'), // js、css、图片等静态资源在文件夹位置
   zipUrl: '', // 替换为实际的 ZIP 包 URL
   zipDest: 'temp.zip', // 临时存储 ZIP 包的路径
   root: ''  // 存储桶的根路径
@@ -27,13 +28,16 @@ const s3_config = {
   secret: '', // 替换为你的 Secret Key
   bucket: '', // 替换为你的存储桶名称
   region: '', // 替换为你的区域
+   // 格式如：oss-cn-suzhou.aliyuncs.com
+  endpoint: '', // 阿里云需要手动配置格式如，AWA则不需要
 };
 
 const s3Client = new aws.S3({
   accessKeyId: s3_config.key,
   secretAccessKey: s3_config.secret,
-  endpoint: `https://${s3_config.region}.aliyuncs.com`, // 阿里云 OSS 的 endpoint
   region: s3_config.region, // 区域
+  endpoint: s3_config.endpoint,
+  // endpoint: `https://${s3_config.region}.aliyuncs.com`, // 阿里云需要拼接好，AWA不需要
   signatureVersion: 'v4', // 使用 S3 兼容的签名版本
 });
 
@@ -113,7 +117,7 @@ function staticPack(cb) {
 function uploadToS3Async(src, uploadPath) {
   return new Promise((resolve, reject) => {
     gulp.src(src)
-    .pipe(s3({...s3_config, endpoint: `${s3_config.region}.aliyuncs.com`}, {
+    .pipe(s3(s3_config, {
       uploadPath, // 上传路径前缀
       headers: {
         'x-amz-acl': 'public-read',
@@ -171,10 +175,7 @@ async function listAllObjects(bucket, prefix) {
 // 备份 S3 存储桶中的 html 文件夹到 html-back
 async function backupHtml() {
   console.log('开始备份 S3 存储桶中的 html 文件夹...');
-
-  const today = new Date();
-  const formattedDate = `${today.getFullYear()}${(today.getMonth() + 1).toString().padStart(2, '0')}${today.getDate().toString().padStart(2, '0')}`;
-  const backupFolder = `html-back-${formattedDate}/`;
+  const backupFolder = `html-back-${dayjs().format('YYYYMMDD')}/`;
 
   try {
     const allObjects = await listAllObjects(s3_config.bucket, `${base_config.root}/html/`);
@@ -210,11 +211,4 @@ function uploadsHtml3() {
   return uploadToS3Async(src, base_config.root);
 }
 
-// 文件监听任务
-function watchFiles() {
-  watch(path.join(base_config.srcDir, '**/*.html'), htmlPack);
-  watch([path.join(base_config.srcDir, '**/*'), `!${path.join(base_config.srcDir, '**/*.html')}`], staticPack);
-}
-
-// 默认任务
 exports.default = series(ensureDistExists, clean, parallel(htmlPack, staticPack), uploadsJs3, backupHtml, uploadsHtml3);
