@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/jquery/latest/jquery.min.js"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/momentjs/latest/moment.min.js"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css" />
+    <script src="./js/angular.min.js"></script>
+</head>
+
+<body>
+    <input type="text" name="daterange" value="" />
+</body>
+
+<script>
+    $(function () {
+        const dateFormat = 'YYYY/MM/DD';
+
+        // 通用的更新显示函数
+        function updateDisplay(start, end) {
+            const days = moment(end).diff(start, 'days');
+            const htmlContent = `
+                <div style="text-align: left">
+                    <p style="color: #006FCF">
+                        <span>${start.format(dateFormat)} - ${end.format(dateFormat)}</span>
+                        <span style="margin-left: 10px; font-weight: 600">共${days}晚入住</span>
+                    </p>
+                    <p style="font-size: 12px">预订入住和离店事件都以酒店当地时间为准</p>
+                </div>
+            `;
+            $('.drp-buttons').empty().show().html(htmlContent);
+        }
+
+        // 初始化日期选择器
+        $('input[name="daterange"]').daterangepicker({
+            opens: 'left',
+            autoApply: true,
+            locale: {
+                format: dateFormat
+            }
+        }, function (start, end) {
+            updateDisplay(start, end);
+            console.log(`A new date selection was made: ${start.format('YYYY-MM-DD')} to ${end.format('YYYY-MM-DD')}`);
+        });
+
+        // 日期选择器显示时的事件处理
+        $('input[name="daterange"]').on('show.daterangepicker', function (ev, picker) {
+            const start = picker.startDate;
+            const end = picker.endDate;
+            $('input[name="daterange"]').val(`${start.format(dateFormat)} - ${end.format(dateFormat)}`);
+            updateDisplay(start, end);
+            console.log('Date range picker shown:', ev, picker);
+        });
+    });
+</script>
+</html>

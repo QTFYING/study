@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="https://cdn.staticfile.net/bootstrap/3.3.7/css/bootstrap.min.css">
+<script src="https://cdn.staticfile.net/jquery/2.1.1/jquery.min.js"></script>
+<script src="https://cdn.staticfile.net/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+<script src="./js/angular.min.js"></script>
+<style>
+  .axo-dual-range-container {
+    position: relative;
+    width: 300px;
+    height: 40px;
+  }
+
+  .axo-range-track {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: #ddd;
+    transform: translateY(-50%);
+  }
+
+  .axo-range-fill {
+    position: absolute;
+    height: 100%;
+    background: #2196F3;
+  }
+
+  .axo-range-slider {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    pointer-events: none; /* 防止滑块覆盖事件 */
+    -webkit-appearance: none; /* 清除默认样式 */
+    appearance: none; /* 兼容 Firefox */
+    background: transparent;
+  }
+
+  /* Chrome/Safari 滑块样式 */
+  .axo-range-slider::-webkit-slider-thumb {
+    pointer-events: auto; /* 允许拖动 */
+    -webkit-appearance: none;
+    width: 16px;
+    height: 16px;
+    background: #2196F3;
+    border-radius: 50%;
+    cursor: pointer;
+  }
+
+  /* Firefox 滑块样式 */
+  .axo-range-slider::-moz-range-thumb {
+    pointer-events: auto; /* 允许拖动 */
+    width: 16px;
+    height: 16px;
+    background: #2196F3;
+    border-radius: 50%;
+    cursor: pointer;
+  }
+
+  .axo-range-slide.min { z-index: 2; } /* 确保最小值滑块在上层 */
+</style>
+</head>
+<body>
+
+  <div ng-app="myApp" ng-controller="myCtrl">
+    <!-- 双滑块组件 -->
+    <div class="axo-dual-range-container">
+      <!-- 轨道 -->
+      <div class="axo-range-track">
+        <!-- 填充区域（高亮选中范围） -->
+        <div class="fill"
+             ng-style="{
+               'left': (min - rangeMin) / (rangeMax - rangeMin) * 100 + '%',
+               'width': (max - min) / (rangeMax - rangeMin) * 100 + '%'
+             }">
+        </div>
+      </div>
+      <!-- 最小值滑块 -->
+      <input type="range"
+             class="axo-range-slider min"
+             min="{{ rangeMin }}"
+             max="{{ rangeMax }}"
+             ng-model="min"
+             ng-change="updateMin()">
+
+      <!-- 最大值滑块 -->
+      <input type="range"
+             class="axo-range-slider max"
+             min="{{ rangeMin }}"
+             max="{{ rangeMax }}"
+             ng-model="max"
+             ng-change="updateMax()">
+    </div>
+
+    <!-- 显示当前范围 -->
+    <div>
+      <label for="minInput">最小值：</label>
+      <input id="minInput" type="text" ng-model="min" ng-change="min = +min；updateMin()">
+    </div>
+
+    <div>
+      <label for="maxInput">最大值：</label>
+      <input id="maxInput" type="text" ng-model="max" ng-change="max = +max；updateMax()">
+    </div>
+  </div>
+
+</body>
+
+<script>
+  angular.module('myApp', [])
+  .controller('myCtrl', function($scope) {
+    // 初始化范围
+    $scope.rangeMin = 0;
+    $scope.rangeMax = 100;
+    $scope.min = 20;
+    $scope.max = 80;
+
+    // 确保最小值不超过最大值
+    $scope.updateMin = function() {
+      if ($scope.min > $scope.max) $scope.max = $scope.min;
+    };
+
+    // 确保最大值不小于最小值
+    $scope.updateMax = function() {
+      if ($scope.max < $scope.min) $scope.min = $scope.max;
+    };
+  });
+</script>
+</html>
