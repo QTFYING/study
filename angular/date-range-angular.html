@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html ng-app="common.dateRangePicker">
+<head>
+    <meta charset="utf-8">
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/jquery/latest/jquery.min.js"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/momentjs/latest/moment.min.js"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css" />
+    <script src="./js/angular.min.js"></script>
+</head>
+
+<body ng-controller="MainController">
+    <div>
+        <label for="daterange">选择日期范围：</label>
+        <common-date-range-picker ng-model="dateRange" options="dateRangeOptions"></common-date-range-picker>
+    </div>
+    <div>
+        <p style="color: #006FCF">
+            <span>{{ dateRange.start }} - {{ dateRange.end }}</span>
+            <span style="margin-left: 10px; font-weight: 600">共 {{ dateRange.days }} 晚入住</span>
+        </p>
+        <p style="font-size: 12px">预订入住和离店事件都以酒店当地时间为准</p>
+    </div>
+
+    <script>
+        (function (window, angular) {
+            'use strict';
+
+            // 定义 AngularJS 应用
+            const app = angular.module('common.dateRangePicker', []);
+
+            // 主控制器
+            app.controller('MainController', ['$scope', function ($scope) {
+                $scope.dateRange = {
+                    start: '',
+                    end: '',
+                    days: 0
+                };
+
+                $scope.dateRangeOptions = {
+                    locale: {
+                        format: 'YYYY/MM/DD'
+                    },
+                    opens: 'left',
+                    autoApply: true
+                };
+            }]);
+
+            // 日期范围选择器指令
+            app.directive('commonDateRangePicker', ['dateRangePickerConfig', function (dateRangePickerConfig) {
+                return {
+                    restrict: 'E',
+                    require: 'ngModel',
+                    scope: {
+                        ngModel: '=',
+                        options: '='
+                    },
+                    template: '<input type="text" class="daterange-input" />',
+                    link: function (scope, element, attrs, ngModelCtrl) {
+                        const input = element.find('input');
+                        const defaultOptions = angular.extend({}, dateRangePickerConfig, scope.options);
+
+                        // 初始化日期选择器
+                        input.daterangepicker(defaultOptions, function (start, end) {
+                            scope.$apply(function () {
+                                scope.ngModel.start = start.format(defaultOptions.locale.format);
+                                scope.ngModel.end = end.format(defaultOptions.locale.format);
+                                scope.ngModel.days = moment(end).diff(start, 'days');
+                            });
+                        });
+
+                        // 更新显示
+                        input.on('show.daterangepicker', function (ev, picker) {
+                            const start = picker.startDate;
+                            const end = picker.endDate;
+                            input.val(`${start.format(defaultOptions.locale.format)} - ${end.format(defaultOptions.locale.format)}`);
+                            scope.$apply(function () {
+                                scope.ngModel.start = start.format(defaultOptions.locale.format);
+                                scope.ngModel.end = end.format(defaultOptions.locale.format);
+                                scope.ngModel.days = moment(end).diff(start, 'days');
+                            });
+                        });
+
+                        // 初始化 ngModel 的值
+                        ngModelCtrl.$render = function () {
+                            if (scope.ngModel.start && scope.ngModel.end) {
+                                input.val(`${scope.ngModel.start} - ${scope.ngModel.end}`);
+                            }
+                        };
+                    }
+                };
+            }]);
+
+            // 日期范围选择器默认配置
+            app.constant('dateRangePickerConfig', {
+                locale: {
+                    format: 'YYYY/MM/DD',
+                    applyLabel: '应用',
+                    cancelLabel: '取消',
+                    customRangeLabel: '自定义范围',
+                    daysOfWeek: ['日', '一', '二', '三', '四', '五', '六'],
+                    monthNames: ['一月', '二月', '三月', '四月', '五月', '六月', '七月', '八月', '九月', '十月', '十一月', '十二月'],
+                    firstDay: 1
+                },
+                opens: 'left',
+                autoApply: true
+            });
+        })(window, angular);
+    </script>
+</body>
+</html>
