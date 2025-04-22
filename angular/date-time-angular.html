@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html ng-app="common.dateRangePicker">
+<html ng-app="datepicker.time">
 
 <head>
     <meta charset="utf-8">
@@ -13,8 +13,9 @@
 <body ng-controller="MainController">
     <div>
         <label for="daterange">选择日期范围：</label>
-        <common-date-range-picker ng-model="dateRange" options="dateRangeOptions"></common-date-range-picker>
+        <input type="text" datepicker-time ng-model="dateRange" options="dateRangeOptions" />
     </div>
+
     <div>
         <p style="color: #006FCF">
             <span>{{ dateRange.start }} - {{ dateRange.end }}</span>
@@ -28,7 +29,7 @@
             'use strict';
 
             // 定义 AngularJS 应用
-            const app = angular.module('common.dateRangePicker', []);
+            const app = angular.module('datepicker.time', []);
 
             // 主控制器
             app.controller('MainController', ['$scope', function ($scope) {
@@ -48,18 +49,18 @@
             }]);
 
             // 日期范围选择器指令
-            app.directive('commonDateRangePicker', ['dateRangePickerConfig', function (dateRangePickerConfig) {
+            app.directive('datepickerTime', ['datepickerTimeConfig', function (datepickerTimeConfig) {
                 return {
-                    restrict: 'E',
+                    restrict: 'AE',
                     require: 'ngModel',
                     scope: {
                         ngModel: '=',
                         options: '='
                     },
-                    template: '<input type="text" class="daterange-input" />',
+                    template: '<input type="text" class="datepicker-time" />',
                     link: function (scope, element, attrs, ngModelCtrl) {
                         const input = element.find('input');
-                        const defaultOptions = angular.extend({}, dateRangePickerConfig, scope.options);
+                        const defaultOptions = angular.extend({}, datepickerTimeConfig, scope.options);
 
                         // 初始化日期选择器
                         input.daterangepicker(defaultOptions, function (start, end) {
@@ -93,7 +94,7 @@
             }]);
 
             // 日期范围选择器默认配置
-            app.constant('dateRangePickerConfig', {
+            app.constant('datepickerTimeConfig', {
                 locale: {
                     format: 'YYYY/MM/DD',
                     applyLabel: '应用',
