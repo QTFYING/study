@@ -2,3 +2,7 @@
   padding-right: 4px;
   padding-left: 4px;
 }
+
+.carousel-indicators {
+  display: none;
+}
