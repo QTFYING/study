@@ -13,15 +13,7 @@
 <body ng-controller="MainController">
     <div>
         <label for="daterange">选择日期范围：</label>
-        <input type="text" datepicker-time ng-model="dateRange" options="dateRangeOptions" />
-    </div>
-
-    <div>
-        <p style="color: #006FCF">
-            <span>{{ dateRange.start }} - {{ dateRange.end }}</span>
-            <span style="margin-left: 10px; font-weight: 600">共 {{ dateRange.days }} 晚入住</span>
-        </p>
-        <p style="font-size: 12px">预订入住和离店事件都以酒店当地时间为准</p>
+        <input type="text" date-picker-time ng-model="datepicker" options="dateRangeOptions"/>
     </div>
 
     <script>
@@ -33,60 +25,36 @@
 
             // 主控制器
             app.controller('MainController', ['$scope', function ($scope) {
-                $scope.dateRange = {
-                    start: '',
-                    end: '',
-                    days: 0
-                };
-
-                $scope.dateRangeOptions = {
-                    locale: {
-                        format: 'YYYY/MM/DD'
-                    },
-                    opens: 'left',
-                    autoApply: true
-                };
+                $scope.datepicker = '2025/04/22 23:00';
+                $scope.dateRangeOptions = {};
             }]);
 
             // 日期范围选择器指令
-            app.directive('datepickerTime', ['datepickerTimeConfig', function (datepickerTimeConfig) {
+            app.directive('datePickerTime', ['datePickerTimeConfig', function (datePickerTimeConfig) {
                 return {
-                    restrict: 'AE',
+                    restrict: 'A',
                     require: 'ngModel',
                     scope: {
                         ngModel: '=',
                         options: '='
                     },
-                    template: '<input type="text" class="datepicker-time" />',
-                    link: function (scope, element, attrs, ngModelCtrl) {
-                        const input = element.find('input');
-                        const defaultOptions = angular.extend({}, datepickerTimeConfig, scope.options);
+                    link: function (scope, element, attrs, ctrl) {
+                        const defaultOptions = angular.extend({}, datePickerTimeConfig, scope.options);
 
                         // 初始化日期选择器
-                        input.daterangepicker(defaultOptions, function (start, end) {
+                        element.daterangepicker(defaultOptions, function (time) {
                             scope.$apply(function () {
-                                scope.ngModel.start = start.format(defaultOptions.locale.format);
-                                scope.ngModel.end = end.format(defaultOptions.locale.format);
-                                scope.ngModel.days = moment(end).diff(start, 'days');
+                                scope.ngModel = time.format(defaultOptions.locale.format);
                             });
                         });
 
                         // 更新显示
-                        input.on('show.daterangepicker', function (ev, picker) {
-                            const start = picker.startDate;
-                            const end = picker.endDate;
-                            input.val(`${start.format(defaultOptions.locale.format)} - ${end.format(defaultOptions.locale.format)}`);
-                            scope.$apply(function () {
-                                scope.ngModel.start = start.format(defaultOptions.locale.format);
-                                scope.ngModel.end = end.format(defaultOptions.locale.format);
-                                scope.ngModel.days = moment(end).diff(start, 'days');
-                            });
-                        });
+                        element.on('show.daterangepicker', function (ev, picker) {});
 
                         // 初始化 ngModel 的值
-                        ngModelCtrl.$render = function () {
-                            if (scope.ngModel.start && scope.ngModel.end) {
-                                input.val(`${scope.ngModel.start} - ${scope.ngModel.end}`);
+                        ctrl.$render = function () {
+                            if (scope.ngModel) {
+                                element.val(scope.ngModel);
                             }
                         };
                     }
@@ -94,18 +62,15 @@
             }]);
 
             // 日期范围选择器默认配置
-            app.constant('datepickerTimeConfig', {
+            app.constant('datePickerTimeConfig', {
                 locale: {
-                    format: 'YYYY/MM/DD',
-                    applyLabel: '应用',
-                    cancelLabel: '取消',
-                    customRangeLabel: '自定义范围',
-                    daysOfWeek: ['日', '一', '二', '三', '四', '五', '六'],
-                    monthNames: ['一月', '二月', '三月', '四月', '五月', '六月', '七月', '八月', '九月', '十月', '十一月', '十二月'],
-                    firstDay: 1
+                    format: 'MM/DD hh:mm',
                 },
                 opens: 'left',
-                autoApply: true
+                autoApply: true,
+                singleDatePicker: true,
+                timePicker: true,
+                timePicker24Hour: true,
             });
         })(window, angular);
     </script>

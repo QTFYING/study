@@ -48,7 +48,7 @@
             }]);
 
             // 日期范围选择器指令
-            app.directive('commonDateRangePicker', ['dateRangePickerConfig', function (dateRangePickerConfig) {
+            app.directive('commonDateRangePicker', ['dateRangePickerConfig', '$timeout',  function (dateRangePickerConfig, $timeout) {
                 return {
                     restrict: 'E',
                     require: 'ngModel',
@@ -61,6 +61,28 @@
                         const input = element.find('input');
                         const defaultOptions = angular.extend({}, dateRangePickerConfig, scope.options);
 
+
+                        function hideEndsOnlyRows() {
+                            $('.daterangepicker table tbody tr').each(function () {
+                                const $tds = $(this).find('td');
+                                const allEnds = $tds.length > 0 && $tds.toArray().every(td => $(td).hasClass('ends'));
+                                if (allEnds) {
+                                    $(this).css('display', 'none');
+                                } else {
+                                    $tds.toArray().map(td => {
+                                        if( $(td).hasClass('ends')) $(td).css('visibility', 'hidden')
+                                    });
+                                }
+                            });
+                        }
+
+                        const observer = new MutationObserver(mutations => {
+                            for (const mutation of mutations) {
+                                console.log('DOM changed', mutation.type);
+                                if (mutation.type === 'childList') hideEndsOnlyRows();
+                            }
+                        });
+
                         // 初始化日期选择器
                         input.daterangepicker(defaultOptions, function (start, end) {
                             scope.$apply(function () {
@@ -68,10 +90,23 @@
                                 scope.ngModel.end = end.format(defaultOptions.locale.format);
                                 scope.ngModel.days = moment(end).diff(start, 'days');
                             });
+
                         });
 
                         // 更新显示
                         input.on('show.daterangepicker', function (ev, picker) {
+                            hideEndsOnlyRows();
+                           const target = document.querySelector('.daterangepicker');
+
+                            // 可以设置一个定时器或事件监听器来等待元素出现
+                            $timeout(() => {
+                                if (target) {
+                                    observer.observe(target, { attributes: true, childList: true, subtree: true });
+                                } else {
+                                    console.error('.daterangepicker 元素未找到');
+                                }
+                            }, 1000); // 延迟时间可以根据需要调整
+
                             const start = picker.startDate;
                             const end = picker.endDate;
                             input.val(`${start.format(defaultOptions.locale.format)} - ${end.format(defaultOptions.locale.format)}`);
