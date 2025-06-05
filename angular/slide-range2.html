@@ -81,7 +81,9 @@
 
   <div>
     <label for="maxInput">最大值：</label>
-    <input id="maxInput" type="number" ng-model="max" ng-blur="updateMax()">
+    <input id="maxInput" type="text" ng-model="maxInput" ng-blur="updateMax()">
+    <span ng-if="isMaxPlus">200+</span>
+    <span ng-if="!isMaxPlus">{{max}}</span>
   </div>
 </div>
 
@@ -92,11 +94,13 @@ angular.module('myApp', [])
 .controller('myCtrl', function($scope, $document) {
   // 初始化范围
   $scope.rangeMin = 0;
-  $scope.rangeMax = 100;
+  $scope.rangeMax = 201; // 201代表200+
   $scope.min = 20;
   $scope.max = 80;
+  $scope.isMaxPlus = false;
+  $scope.maxInput = $scope.max;
 
-  // 开始拖动滑块
+  // 拖动滑块
   $scope.startDrag = function(event, type) {
     const track = event.target.parentElement;
     const trackRect = track.getBoundingClientRect();
@@ -105,15 +109,24 @@ angular.module('myApp', [])
     const onMouseMove = function(e) {
       const trackWidth = trackRect.width;
       const offsetX = e.clientX - trackRect.left;
+      // 实际长度为202（0~201），201代表200+
       const value = Math.round($scope.rangeMin + (offsetX / trackWidth) * ($scope.rangeMax - $scope.rangeMin));
 
       if (type === 'min') {
         $scope.$apply(() => {
-          $scope.min = Math.min(Math.max(value, $scope.rangeMin), $scope.max);
+          $scope.min = Math.min(Math.max(value, $scope.rangeMin), ($scope.max === 201 ? 200 : $scope.max));
         });
       } else if (type === 'max') {
         $scope.$apply(() => {
-          $scope.max = Math.max(Math.min(value, $scope.rangeMax), $scope.min);
+          if (value >= 201) {
+            $scope.max = 201;
+            $scope.isMaxPlus = true;
+            $scope.maxInput = '200+';
+          } else {
+            $scope.max = Math.max(Math.min(value, 200), $scope.min);
+            $scope.isMaxPlus = false;
+            $scope.maxInput = $scope.max;
+          }
         });
       }
     };
@@ -128,29 +141,54 @@ angular.module('myApp', [])
     $document.on('mouseup', onMouseUp);
   };
 
- // 确保最小值不超过最大值，并限制在范围内
+  // 最小值校验
   $scope.updateMin = function() {
     if ($scope.min === null || $scope.min === '' || isNaN($scope.min)) {
-      return; // 允许为空，等待用户完成输入
+      return;
     }
     if ($scope.min < $scope.rangeMin) {
       $scope.min = $scope.rangeMin;
-    } else if ($scope.min > $scope.max) {
+    } else if ($scope.max === 201 && $scope.min > 200) {
+      $scope.min = 200;
+    } else if ($scope.min > $scope.max || ($scope.max !== 201 && $scope.min > $scope.max)) {
       $scope.min = $scope.max;
     }
   };
 
-  // 确保最大值不小于最小值，并限制在范围内
+  // 最大值校验
   $scope.updateMax = function() {
-    if ($scope.max === null || $scope.max === '' || isNaN($scope.max)) {
-      return; // 允许为空，等待用户完成输入
-    }
-    if ($scope.max > $scope.rangeMax) {
-      $scope.max = $scope.rangeMax;
-    } else if ($scope.max < $scope.min) {
-      $scope.max = $scope.min;
+    let val = $scope.maxInput;
+    if (typeof val === 'string' && val.trim().endsWith('+')) {
+      $scope.max = 201;
+      $scope.isMaxPlus = true;
+      $scope.maxInput = '200+';
+    } else {
+      let num = parseInt(val, 10);
+      if (isNaN(num)) return;
+      if (num > 200) {
+        $scope.max = 201;
+        $scope.isMaxPlus = true;
+        $scope.maxInput = '200+';
+      } else if (num < $scope.min) {
+        $scope.max = $scope.min;
+        $scope.isMaxPlus = false;
+        $scope.maxInput = $scope.min;
+      } else {
+        $scope.max = num;
+        $scope.isMaxPlus = false;
+        $scope.maxInput = num;
+      }
     }
   };
+
+  // 监听max变化，自动同步maxInput
+  $scope.$watch('max', function(newVal) {
+    if ($scope.isMaxPlus) {
+      $scope.maxInput = '200+';
+    } else {
+      $scope.maxInput = newVal;
+    }
+  });
 });
 </script>
 </html>
