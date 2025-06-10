@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/jquery/latest/jquery.min.js"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/momentjs/latest/moment.min.js"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css" />
+    <script src="../js/angular.min.js"></script>
+</head>
+
+<body>
+    <div ng-app="demoApp" ng-controller="DemoCtrl">
+        <simple-autocomplete
+            ng-model="fruit"
+            autocomplete-label="fruitLabel"
+            placeholder="请输入水果"
+            ng-disabled="isDisabled"
+            ng-readonly="isReadonly"
+            on-select-data="onSelect($data)"
+            on-clear-data="onClear()"
+            opened="opened">
+        </simple-autocomplete>
+        <p>选中值：{{fruit}}</p>
+        <button ng-click="isDisabled = !isDisabled">切换禁用</button>
+        <button ng-click="isReadonly = !isReadonly">切换只读</button>
+    </div>
+
+    <script>
+        (function (window, angular) {
+            'use strict';
+
+            // 定义 AngularJS 应用
+            const app = angular.module('demoApp', []);
+
+            // 主控制器
+            app.controller('DemoCtrl', function($scope) {
+                $scope.fruit = '';
+                $scope.fruitLabel = '';
+                $scope.isDisabled = false;
+                $scope.isReadonly = false;
+                $scope.opened = false;
+                $scope.onSelect = function(data) {
+                    console.log('你选择了: ' + data);
+                };
+                $scope.onClear = function() {
+                    console.log('已清空');
+                };
+            });
+
+            // 日期范围选择器指令
+            app.directive('simpleAutocomplete', function () {
+                // @：字符串绑定（单向），父作用域的属性值会以字符串形式传递给指令作用域。
+                // =：双向绑定，父作用域和指令作用域之间的数据是同步的，适合对象、数组等复杂类型。
+                // =?：可选的双向绑定，如果父作用域没有传递该属性，指令内部不会报错。
+                // &：方法绑定，允许指令调用父作用域的方法。
+                // '@?'、'&?' 等：可选的字符串/方法绑定（AngularJS 1.4+ 支持）。
+                return {
+                    restrict: 'AE',
+                    scope: {
+                        ngModel: '=?',
+                        ngDisabled: '=',
+                        ngReadonly: '=',
+                        autocompleteLabel: '=?',
+                        placeholder: '@',
+                        onSelectData: '&',
+                        onClearData: '&',
+                        opened: '=?'
+                    },
+                     template: `
+                        <div>
+                            <input type="text"
+                                class="form-control"
+                                ng-model="ngModel"
+                                ng-disabled="ngDisabled"
+                                ng-readonly="ngReadonly"
+                                placeholder="{{placeholder}}"
+                                ng-focus="showList()"
+                                ng-blur="blurHandler($event)"
+                                autocomplete="off"
+                            />
+                            <ul ng-show="showDropdown && !ngReadonly" class="dropdown-menu" style="display:block;position:static">
+                                <li ng-repeat="item in items" ng-mousedown="select(item)">
+                                    {{item}}
+                                </li>
+                            </ul>
+                            <button type="button" ng-click="clear()" ng-if="ngModel">清空</button>
+                        </div>
+                    `,
+                    link: function(scope) {
+                        // 示例数据
+                        scope.items = ['Apple', 'Banana', 'Orange', 'Pear', 'Peach'];
+                        scope.showDropdown = false;
+
+                        scope.showList = function() {
+                            if (!scope.ngReadonly) {
+                                scope.showDropdown = true;
+                                scope.opened = true;
+                            }
+                        };
+                        scope.hideList = function() {
+                            scope.showDropdown = false;
+                            scope.opened = false;
+                        };
+                        scope.select = function(item) {
+                            scope.ngModel = item;
+                            scope.showDropdown = false;
+                            scope.opened = false;
+                            if (scope.onSelectData) {
+                                scope.onSelectData({$data: item});
+                            }
+                        };
+                        scope.clear = function() {
+                            scope.ngModel = null;
+                            if (scope.onClearData) {
+                                scope.onClearData();
+                            }
+                        };
+
+                        // 延迟关闭，防止 blur 先于 mousedown
+                        scope.blurHandler = function($event) {
+                            setTimeout(function() {
+                                scope.showDropdown = false;
+                                scope.opened = false;
+                                scope.$apply();
+                            }, 150);
+                        };
+                    }
+                };
+            });
+        })(window, angular);
+    </script>
+</body>
+
+</html>
