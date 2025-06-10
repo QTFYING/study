@@ -39,6 +39,8 @@
 
         const dateFormat = 'YYYY/MM/DD ddd';
 
+        const lockedStart = moment(); // 锁定为今天
+
         // 通用的更新显示函数
         function updateDisplay(start, end) {
             const days = moment(end).diff(start, 'days');
@@ -58,6 +60,7 @@
         $('input[name="daterange"]').daterangepicker({
             opens: 'left',
             autoApply: true,
+            singleDatePicker: true,
             locale: {
                 format: dateFormat
             }
@@ -73,6 +76,17 @@
             $('input[name="daterange"]').val(`${start.format(dateFormat)} - ${end.format(dateFormat)}`);
             updateDisplay(start, end);
             console.log('Date range picker shown:', ev, picker);
+
+            picker.setStartDate(lockedStart); // 每次弹出都重置
+            // 禁用左侧日历（开始日期）
+            $('.daterangepicker .calendar.left').css('pointer-events', 'none').css('opacity', 0.5);
+            // 禁用所有小于 lockedStart 的日期
+            $('.daterangepicker .calendar-table td.available').each(function () {
+                const date = $(this).attr('data-title');
+                if (date && moment($(this).attr('data-date')).isBefore(lockedStart, 'day')) {
+                    $(this).addClass('off disabled');
+                }
+            });
         });
     });
 </script>
