@@ -1,0 +1,38 @@
+<html lang="zh-CN">
+
+<head>
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+  <link rel="icon" href="<%= BASE_URL %>favicon.ico" />
+</head>
+
+<body>
+  写一个数组slice的方法
+  <script>
+    function slice(array, start, end) {
+      let length = array == null ? 0 : array.length;
+      if (!length) {
+        return [];
+      }
+      start = start == null ? 0 : start; // start = {}
+      end = end === undefined ? length : end; // end = length
+      end = end > length ? length : end; // end = length
+      length = start > end ? 0 : (end - start) >>> 0; //length = 0
+      start >>>= 0; // start = 0
+
+      let index = -1;
+      const result = new Array(length); // result = []
+      while (++index < length) {
+        result[index] = array[index + start];
+      }
+      return result;
+    }
+
+
+    console.log(slice([1, 2, 3, 4], {}));
+
+  </script>
+</body>
+
+</html>
