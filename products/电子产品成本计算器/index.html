@@ -196,7 +196,7 @@
             );
         };
 
-        const CostTrendChart = ({ days, products, onChangeDays }) => {
+        const CostTrendChart = ({ days, products, onChangeDays, onShowReport }) => {
             const chartRef = React.useRef(null);
             const canvasRef = React.useRef(null);
             const generateChartData = (days, products) => {
@@ -206,10 +206,7 @@
 
                 // 初始化产品成本数据
                 products.forEach(product => {
-                    productCosts[product.id] = {
-                        name: product.name,
-                        data: []
-                    };
+                    productCosts[product.id] = {name: product.name, data: []};
                 });
 
                 // 生成过去N天的数据
@@ -351,24 +348,33 @@
                         <h2 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
                             <i className="fa fa-line-chart mr-2 text-primary"></i>成本趋势
                         </h2>
-                        <div className="mb-4 flex flex-wrap gap-2">
+                        <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
+                            <div className="flex space-x-2">
+                                <button
+                                    className={`time-filter-btn px-3 py-1 rounded-md text-sm ${days === 7 ? 'bg-primary text-white' : 'bg-gray-200 text-gray-700'}`}
+                                    onClick={() => onChangeDays(7)}
+                                >
+                                    最近7天
+                                </button>
+                                <button
+                                    className={`time-filter-btn px-3 py-1 rounded-md text-sm ${days === 30 ? 'bg-primary text-white' : 'bg-gray-200 text-gray-700'}`}
+                                    onClick={() => onChangeDays(30)}
+                                >
+                                    最近30天
+                                </button>
+                                <button
+                                    className={`time-filter-btn px-3 py-1 rounded-md text-sm ${days === 90 ? 'bg-primary text-white' : 'bg-gray-200 text-gray-700'}`}
+                                    onClick={() => onChangeDays(90)}
+                                >
+                                    最近90天
+                                </button>
+                            </div>
                             <button
-                                className={`time-filter-btn px-3 py-1 rounded-md text-sm ${days === 7 ? 'bg-primary text-white' : 'bg-gray-200 text-gray-700'}`}
-                                onClick={() => onChangeDays(7)}
+                                className="px-3 py-1 rounded-md text-sm bg-purple-100 text-purple-700 hover:bg-purple-200 transition-colors flex items-center"
+                                onClick={onShowReport}
                             >
-                                最近7天
-                            </button>
-                            <button
-                                className={`time-filter-btn px-3 py-1 rounded-md text-sm ${days === 30 ? 'bg-primary text-white' : 'bg-gray-200 text-gray-700'}`}
-                                onClick={() => onChangeDays(30)}
-                            >
-                                最近30天
-                            </button>
-                            <button
-                                className={`time-filter-btn px-3 py-1 rounded-md text-sm ${days === 90 ? 'bg-primary text-white' : 'bg-gray-200 text-gray-700'}`}
-                                onClick={() => onChangeDays(90)}
-                            >
-                                最近90天
+                                <i className="fa fa-pie-chart mr-1"></i>
+                                成本分析报告
                             </button>
                         </div>
                         <div className="h-64">
@@ -397,6 +403,182 @@
                 );
             }
             return null;
+        };
+
+        // 成本分析报告模态框
+        const CostAnalysisReportModal = ({ isOpen, onClose, days, products }) => {
+            if (!isOpen) return null;
+
+            // 1. 计算区间段的总成本
+            // 遍历过去 days 天，每天计算所有 active 产品的 dailyCost 之和，然后累加
+            const calculateIntervalTotalCost = () => {
+                let total = 0;
+                for (let i = days - 1; i >= 0; i--) {
+                    const d = dayjs().subtract(i, 'day');
+                    const dateStr = d.format('YYYY-MM-DD');
+
+                    products.forEach(product => {
+                        // 判断在该日期产品是否处于 active 状态（已购买且未退役，或者退役日期在当天之后）
+                        // 注意：这里只要产品在该日期是"拥有"状态，就产生了日均成本
+                        // 如果产品在中间某天退役，退役后的日子不再产生新成本（日均成本固定在退役那天，但"今日成本"概念上通常指还在用的成本）
+                        // 按照 CostTrendChart 的逻辑：
+                        // if (dateStr >= product.purchaseDate && product.status === ProductStatus.ACTIVE)
+                        // 但是如果产品 retired 了，它在 retired 之前也是有成本的。
+                        // CostTrendChart 逻辑回顾：
+                        // if (dateStr >= product.purchaseDate && product.status === ProductStatus.ACTIVE)
+                        // 只有 ACTIVE 的产品才算在总成本里？
+                        // 让我们看 CostTrendChart:
+                        // if (dateStr >= product.purchaseDate && product.status === ProductStatus.ACTIVE) { ... }
+                        // else { ... push(0) }
+                        // 所以已退役产品在图表中是不显示"总成本"贡献的？
+                        // 看起来是的。Summary 组件也是: if (product.status === ProductStatus.ACTIVE)
+
+                        // 所以这里保持一致：只计算在该日期处于 ACTIVE 状态的产品的成本
+                        // 如果产品在期间内退役，退役后就不算在"总成本"里了。
+
+                        const isPurchased = dateStr >= product.purchaseDate;
+                        const isRetired = product.status === ProductStatus.RETIRED;
+                        const isRetirementDateAfter = isRetired ? dateStr <= product.retirementDate : true;
+
+                        // 严格匹配 CostTrendChart 逻辑：只统计 ACTIVE。
+                        // 但是如果用户想看"区间段总成本"，如果期间内产品从 Active 变 Retired，它应该贡献了部分成本。
+                        // CostTrendChart 里的逻辑其实有个 bug 或者是特性：它只统计 *当前* 状态为 ACTIVE 的产品在过去的成本？
+                        // 不，CostTrendChart 遍历 products。如果 product.status === ACTIVE...
+                        // 这意味着如果一个产品现在是 RETIRED，它在 CostTrendChart 的"总成本"线上是完全不出现的，即使它过去 7 天里前 3 天是 ACTIVE。
+                        // 让我们确认这一点。
+                        // const calculateDailyCost ...
+                        // CostTrendChart:
+                        // products.forEach(product => {
+                        //    if (dateStr >= product.purchaseDate && product.status === ProductStatus.ACTIVE)
+                        // })
+                        // 是的，如果 product.status 是 RETIRED，它直接被忽略了。
+                        // 这可能不是最精确的，但为了保持数据一致性，我应该遵循这个逻辑，或者稍微改进它但只针对报告。
+                        // 用户说："分析出改区间段的总成本"。
+                        // 如果我改进了逻辑（包含已退役产品在服役期间的成本），报告里的数字可能和图表对不上。
+                        // 建议：保持和图表逻辑一致，或者只计算"当前"Active产品的区间成本。
+                        // 但更合理的逻辑是：在该日期，如果产品是 Active 的（即 purchaseDate <= date < retirementDate），就有成本。
+                        // 现有代码：product.status === ProductStatus.ACTIVE 是检查产品 *当前* 的最新状态。
+                        // 所以已退役产品在历史图表里确实消失了。
+                        // 我将沿用这个逻辑：只计算 *当前* 为 ACTIVE 的产品在区间内的成本。
+
+                        if (dateStr >= product.purchaseDate && product.status === ProductStatus.ACTIVE) {
+                            total += calculateDailyCost(product, dateStr);
+                        }
+                    });
+                }
+                return total;
+            };
+
+            const intervalTotalCost = calculateIntervalTotalCost();
+
+            // 2. 计算每个产品的成本下降情况
+            // 逻辑：区间开始时的日均成本 - 区间结束时的日均成本
+            const productDrops = products.map(product => {
+                if (product.status !== ProductStatus.ACTIVE) return null; // 同样只关注 Active 产品
+
+                const startDate = dayjs().subtract(days - 1, 'day');
+                const endDate = dayjs();
+
+                // 确定计算的起始日期：如果购买日期在区间内，取购买日期后一天（避免除以0），否则取区间开始日期
+                let effectiveStartDate = startDate;
+                if (dayjs(product.purchaseDate).isAfter(startDate)) {
+                    effectiveStartDate = dayjs(product.purchaseDate).add(1, 'day');
+                }
+
+                // 如果起始日期已经在今天之后（比如今天刚买），则没有下降
+                if (effectiveStartDate.isAfter(endDate)) {
+                    return null;
+                }
+
+                const startCost = calculateDailyCost(product, effectiveStartDate.format('YYYY-MM-DD'));
+                const endCost = calculateDailyCost(product, endDate.format('YYYY-MM-DD'));
+
+                // 如果 startCost 为 0 (比如刚买)，diff 也就没意义或者为负
+                // calculateDailyCost handles daysUsed=0 -> return 0.
+
+                return {
+                    id: product.id,
+                    name: product.name,
+                    startCost,
+                    endCost,
+                    drop: startCost - endCost,
+                    dropPercent: startCost > 0 ? ((startCost - endCost) / startCost * 100) : 0
+                };
+            }).filter(Boolean).sort((a, b) => b.drop - a.drop); // 按下降金额排序
+
+            return (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                    <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl mx-4 animate-slide-in flex flex-col max-h-[90vh]">
+                        <div className="p-6 border-b flex justify-between items-center flex-shrink-0">
+                            <h3 className="text-lg font-semibold text-gray-800 flex items-center">
+                                <i className="fa fa-pie-chart mr-2 text-primary"></i>
+                                成本分析报告 (最近{days}天)
+                            </h3>
+                            <button onClick={onClose} className="text-gray-400 hover:text-gray-600 transition-all">
+                                <i className="fa fa-times"></i>
+                            </button>
+                        </div>
+
+                        <div className="p-6 overflow-y-auto">
+                            {/* 汇总卡片 */}
+                            <div className="bg-blue-50 border-l-4 border-blue-500 p-4 mb-6 rounded-r-md">
+                                <div className="flex justify-between items-center">
+                                    <div>
+                                        <p className="text-sm text-blue-600 font-medium">区间总消耗成本</p>
+                                        <p className="text-xs text-blue-400 mt-1">（该时间段内所有服役产品日均成本之和）</p>
+                                    </div>
+                                    <p className="text-3xl font-bold text-blue-700">{formatCurrency(intervalTotalCost)}</p>
+                                </div>
+                            </div>
+
+                            {/* 详细列表 */}
+                            <h4 className="text-md font-semibold text-gray-700 mb-3">产品成本下降详情</h4>
+                            <div className="overflow-x-auto border rounded-lg">
+                                <table className="min-w-full divide-y divide-gray-200">
+                                    <thead className="bg-gray-50">
+                                        <tr>
+                                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">产品名称</th>
+                                            <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">期初日均成本</th>
+                                            <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">期末日均成本</th>
+                                            <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">成本下降额</th>
+                                            <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">下降比例</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="bg-white divide-y divide-gray-200">
+                                        {productDrops.map(item => (
+                                            <tr key={item.id} className="hover:bg-gray-50">
+                                                <td className="px-4 py-3 text-sm font-medium text-gray-900">{item.name}</td>
+                                                <td className="px-4 py-3 text-sm text-gray-500 text-right">{formatCurrency(item.startCost)}</td>
+                                                <td className="px-4 py-3 text-sm text-gray-500 text-right">{formatCurrency(item.endCost)}</td>
+                                                <td className="px-4 py-3 text-sm text-green-600 font-medium text-right">
+                                                    {item.drop >= 0 ? '↓ ' : '↑ '}{formatCurrency(Math.abs(item.drop))}
+                                                </td>
+                                                <td className="px-4 py-3 text-sm text-gray-500 text-right">
+                                                    <span className={`px-2 py-1 rounded-full text-xs ${item.dropPercent > 0 ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}>
+                                                        {item.dropPercent.toFixed(1)}%
+                                                    </span>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                        {productDrops.length === 0 && (
+                                            <tr>
+                                                <td colSpan="5" className="px-4 py-8 text-center text-gray-500">
+                                                    暂无服役中的产品数据
+                                                </td>
+                                            </tr>
+                                        )}
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div className="mt-4 text-xs text-gray-400">
+                                * 仅统计当前处于"服役中"状态的产品。<br/>
+                                * 期初日均成本：取区间开始日期或产品购买日期的日均成本。<br/>
+                                * 期末日均成本：取今日的日均成本。
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
         };
 
         // 产品趋势模态框
@@ -609,7 +791,6 @@
                                 </thead>
                                 <tbody className="bg-white divide-y divide-gray-200">
                                     {products.map(product => {
-                                        console.log('xxx-2', product, product.id)
                                         const {
                                             id,
                                             name,
@@ -690,6 +871,7 @@
             const [isTrendOpen, setIsTrendOpen] = React.useState(false);
             const [trendProduct, setTrendProduct] = React.useState(null);
             const [chartDays, setChartDays] = React.useState(7);
+            const [isReportOpen, setIsReportOpen] = React.useState(false);
 
             // 打开产品趋势对话框
             const handleViewTrend = (product) => {
@@ -702,10 +884,11 @@
                     <Header />
                     <main className="container mx-auto px-4 py-6">
                         <Summary products={products} />
-                        <CostTrendChart days={chartDays} products={products} onChangeDays={setChartDays} />
+                        <CostTrendChart days={chartDays} products={products} onChangeDays={setChartDays} onShowReport={() => setIsReportOpen(true)} />
                         <ProductList products={products} onViewTrend={handleViewTrend}/>
                     </main>
                     <ProductTrendModal isOpen={isTrendOpen} onClose={() => setIsTrendOpen(false)} product={trendProduct}/>
+                    <CostAnalysisReportModal isOpen={isReportOpen} onClose={() => setIsReportOpen(false)} days={chartDays} products={products} />
                 </div>
             );
         };
