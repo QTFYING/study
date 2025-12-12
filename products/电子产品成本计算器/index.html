@@ -126,6 +126,40 @@
             return { labels, costData };
         };
 
+        // 生成趋势数据的通用函数
+        const generateTrendData = (days, products) => {
+            const labels = [], totalCostData = [], productCosts = {};
+
+            // 初始化产品成本数据
+            products.forEach(product => {
+                productCosts[product.id] = {
+                    name: product.name,
+                    data: [],
+                    status: product.status,
+                    purchaseDate: product.purchaseDate
+                };
+            });
+
+            // 生成过去N天的数据
+            for (let i = days - 1; i >= 0; i--) {
+                const d = dayjs().subtract(i, 'day');
+                const dateStr = d.format('YYYY-MM-DD');
+                labels.push(d.format('MM-DD'));
+                let dailyTotal = 0;
+                products.forEach(product => {
+                    if (dateStr >= product.purchaseDate && product.status === ProductStatus.ACTIVE) {
+                        const dailyCost = calculateDailyCost(product, dateStr);
+                        dailyTotal += dailyCost;
+                        productCosts[product.id].data.push(dailyCost);
+                    } else {
+                        productCosts[product.id].data.push(0);
+                    }
+                });
+                totalCostData.push(dailyTotal);
+            }
+            return { labels, totalCostData, productCosts };
+        };
+
         // 组件
         const Header = () => {
             return (
@@ -196,36 +230,12 @@
             );
         };
 
-        const CostTrendChart = ({ days, products, onChangeDays, onShowReport }) => {
+        const CostTrendChart = ({ days, trendData, onChangeDays, onShowReport }) => {
             const chartRef = React.useRef(null);
             const canvasRef = React.useRef(null);
-            const generateChartData = (days, products) => {
-                const labels = [];
-                const totalCostData = [];
-                const productCosts = {};
 
-                // 初始化产品成本数据
-                products.forEach(product => {
-                    productCosts[product.id] = {name: product.name, data: []};
-                });
-
-                // 生成过去N天的数据
-                for (let i = days - 1; i >= 0; i--) {
-                    const d = dayjs().subtract(i, 'day');
-                    const dateStr = d.format('YYYY-MM-DD');
-                    labels.push(d.format('MM-DD'));
-                    let dailyTotal = 0;
-                    products.forEach(product => {
-                        if (dateStr >= product.purchaseDate && product.status === ProductStatus.ACTIVE) {
-                            const dailyCost = calculateDailyCost(product, dateStr);
-                            dailyTotal += dailyCost;
-                            productCosts[product.id].data.push(dailyCost);
-                        } else {
-                            productCosts[product.id].data.push(0);
-                        }
-                    });
-                    totalCostData.push(dailyTotal);
-                }
+            const { labels, datasets } = React.useMemo(() => {
+                const { labels, totalCostData, productCosts } = trendData;
 
                 // 准备数据集
                 const datasets = [
@@ -262,11 +272,7 @@
                 });
 
                 return { labels, datasets };
-            };
-
-
-
-            const { labels, datasets } = React.useMemo(() => generateChartData(days, products), [days, products]);
+            }, [trendData]);
 
             React.useEffect(() => {
                 // 如果图表已存在，销毁它
@@ -406,98 +412,34 @@
         };
 
         // 成本分析报告模态框
-        const CostAnalysisReportModal = ({ isOpen, onClose, days, products }) => {
+        const CostAnalysisReportModal = ({ isOpen, onClose, days, trendData }) => {
             if (!isOpen) return null;
 
+            const { totalCostData, productCosts } = trendData;
+
             // 1. 计算区间段的总成本
-            // 遍历过去 days 天，每天计算所有 active 产品的 dailyCost 之和，然后累加
-            const calculateIntervalTotalCost = () => {
-                let total = 0;
-                for (let i = days - 1; i >= 0; i--) {
-                    const d = dayjs().subtract(i, 'day');
-                    const dateStr = d.format('YYYY-MM-DD');
-
-                    products.forEach(product => {
-                        // 判断在该日期产品是否处于 active 状态（已购买且未退役，或者退役日期在当天之后）
-                        // 注意：这里只要产品在该日期是"拥有"状态，就产生了日均成本
-                        // 如果产品在中间某天退役，退役后的日子不再产生新成本（日均成本固定在退役那天，但"今日成本"概念上通常指还在用的成本）
-                        // 按照 CostTrendChart 的逻辑：
-                        // if (dateStr >= product.purchaseDate && product.status === ProductStatus.ACTIVE)
-                        // 但是如果产品 retired 了，它在 retired 之前也是有成本的。
-                        // CostTrendChart 逻辑回顾：
-                        // if (dateStr >= product.purchaseDate && product.status === ProductStatus.ACTIVE)
-                        // 只有 ACTIVE 的产品才算在总成本里？
-                        // 让我们看 CostTrendChart:
-                        // if (dateStr >= product.purchaseDate && product.status === ProductStatus.ACTIVE) { ... }
-                        // else { ... push(0) }
-                        // 所以已退役产品在图表中是不显示"总成本"贡献的？
-                        // 看起来是的。Summary 组件也是: if (product.status === ProductStatus.ACTIVE)
-
-                        // 所以这里保持一致：只计算在该日期处于 ACTIVE 状态的产品的成本
-                        // 如果产品在期间内退役，退役后就不算在"总成本"里了。
-
-                        const isPurchased = dateStr >= product.purchaseDate;
-                        const isRetired = product.status === ProductStatus.RETIRED;
-                        const isRetirementDateAfter = isRetired ? dateStr <= product.retirementDate : true;
-
-                        // 严格匹配 CostTrendChart 逻辑：只统计 ACTIVE。
-                        // 但是如果用户想看"区间段总成本"，如果期间内产品从 Active 变 Retired，它应该贡献了部分成本。
-                        // CostTrendChart 里的逻辑其实有个 bug 或者是特性：它只统计 *当前* 状态为 ACTIVE 的产品在过去的成本？
-                        // 不，CostTrendChart 遍历 products。如果 product.status === ACTIVE...
-                        // 这意味着如果一个产品现在是 RETIRED，它在 CostTrendChart 的"总成本"线上是完全不出现的，即使它过去 7 天里前 3 天是 ACTIVE。
-                        // 让我们确认这一点。
-                        // const calculateDailyCost ...
-                        // CostTrendChart:
-                        // products.forEach(product => {
-                        //    if (dateStr >= product.purchaseDate && product.status === ProductStatus.ACTIVE)
-                        // })
-                        // 是的，如果 product.status 是 RETIRED，它直接被忽略了。
-                        // 这可能不是最精确的，但为了保持数据一致性，我应该遵循这个逻辑，或者稍微改进它但只针对报告。
-                        // 用户说："分析出改区间段的总成本"。
-                        // 如果我改进了逻辑（包含已退役产品在服役期间的成本），报告里的数字可能和图表对不上。
-                        // 建议：保持和图表逻辑一致，或者只计算"当前"Active产品的区间成本。
-                        // 但更合理的逻辑是：在该日期，如果产品是 Active 的（即 purchaseDate <= date < retirementDate），就有成本。
-                        // 现有代码：product.status === ProductStatus.ACTIVE 是检查产品 *当前* 的最新状态。
-                        // 所以已退役产品在历史图表里确实消失了。
-                        // 我将沿用这个逻辑：只计算 *当前* 为 ACTIVE 的产品在区间内的成本。
-
-                        if (dateStr >= product.purchaseDate && product.status === ProductStatus.ACTIVE) {
-                            total += calculateDailyCost(product, dateStr);
-                        }
-                    });
-                }
-                return total;
-            };
-
-            const intervalTotalCost = calculateIntervalTotalCost();
+            // 直接使用传入的 totalCostData 求和
+            const intervalTotalCost = totalCostData.reduce((sum, val) => sum + val, 0);
 
             // 2. 计算每个产品的成本下降情况
             // 逻辑：区间开始时的日均成本 - 区间结束时的日均成本
-            const productDrops = products.map(product => {
+            // 这里的"区间开始"对于新购买的产品来说，应该是购买后的第一天（有非0成本的那天）
+            const productDrops = Object.values(productCosts).map(product => {
                 if (product.status !== ProductStatus.ACTIVE) return null; // 同样只关注 Active 产品
 
-                const startDate = dayjs().subtract(days - 1, 'day');
-                const endDate = dayjs();
+                const data = product.data;
+                if (!data || data.length === 0) return null;
 
-                // 确定计算的起始日期：如果购买日期在区间内，取购买日期后一天（避免除以0），否则取区间开始日期
-                let effectiveStartDate = startDate;
-                if (dayjs(product.purchaseDate).isAfter(startDate)) {
-                    effectiveStartDate = dayjs(product.purchaseDate).add(1, 'day');
-                }
+                // 找到第一个非0的成本作为"期初成本"
+                // 这样处理是因为如果产品是在区间中间购买的，前几天的成本是0，下降应该是从有成本那天开始算的
+                const startCost = data.find(val => val > 0) || 0;
+                const endCost = data[data.length - 1] || 0;
 
-                // 如果起始日期已经在今天之后（比如今天刚买），则没有下降
-                if (effectiveStartDate.isAfter(endDate)) {
-                    return null;
-                }
-
-                const startCost = calculateDailyCost(product, effectiveStartDate.format('YYYY-MM-DD'));
-                const endCost = calculateDailyCost(product, endDate.format('YYYY-MM-DD'));
-
-                // 如果 startCost 为 0 (比如刚买)，diff 也就没意义或者为负
-                // calculateDailyCost handles daysUsed=0 -> return 0.
+                // 如果整个区间都是0（理论上不应该，因为过滤了Active），或者startCost为0
+                if (startCost === 0) return null;
 
                 return {
-                    id: product.id,
+                    id: product.name, // 这里 productCosts 的 value 没有 id 字段，但 key 是 id。不过 UI 只用 name
                     name: product.name,
                     startCost,
                     endCost,
@@ -873,6 +815,8 @@
             const [chartDays, setChartDays] = React.useState(7);
             const [isReportOpen, setIsReportOpen] = React.useState(false);
 
+            const trendData = React.useMemo(() => generateTrendData(chartDays, products), [chartDays, products]);
+
             // 打开产品趋势对话框
             const handleViewTrend = (product) => {
                 setTrendProduct(product);
@@ -884,11 +828,11 @@
                     <Header />
                     <main className="container mx-auto px-4 py-6">
                         <Summary products={products} />
-                        <CostTrendChart days={chartDays} products={products} onChangeDays={setChartDays} onShowReport={() => setIsReportOpen(true)} />
+                        <CostTrendChart days={chartDays} trendData={trendData} onChangeDays={setChartDays} onShowReport={() => setIsReportOpen(true)} />
                         <ProductList products={products} onViewTrend={handleViewTrend}/>
                     </main>
                     <ProductTrendModal isOpen={isTrendOpen} onClose={() => setIsTrendOpen(false)} product={trendProduct}/>
-                    <CostAnalysisReportModal isOpen={isReportOpen} onClose={() => setIsReportOpen(false)} days={chartDays} products={products} />
+                    <CostAnalysisReportModal isOpen={isReportOpen} onClose={() => setIsReportOpen(false)} days={chartDays} trendData={trendData} />
                 </div>
             );
         };
